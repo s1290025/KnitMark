@@ -12,6 +12,7 @@ import {
 import {
     ActivityIndicator,
     Alert,
+    Linking,
     Modal,
     SafeAreaView,
     ScrollView,
@@ -140,16 +141,23 @@ export default function SettingsScreen() {
   };
 
   const openPrivacyPolicy =
-    () => {
-      Alert.alert(
-        isJapanese
-          ? 'プライバシーポリシー'
-          : 'Privacy Policy',
+    async () => {
+      const url = isJapanese
+        ? 'https://s1290025.github.io/KnitMark_support/ja/privacy.html'
+        : 'https://s1290025.github.io/KnitMark_support/privacy.html';
 
-        isJapanese
-          ? '公開前にプライバシーポリシーを接続します。'
-          : 'The privacy policy will be added before release.'
-      );
+      try {
+        await Linking.openURL(url);
+      } catch {
+        Alert.alert(
+          isJapanese
+            ? 'エラー'
+            : 'Error',
+          isJapanese
+            ? 'プライバシーポリシーを開けませんでした。'
+            : 'Could not open the privacy policy.'
+        );
+      }
     };
 
   return (
