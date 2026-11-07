@@ -179,6 +179,26 @@ export default function SettingsScreen() {
       }
     };
 
+  const openIntroAgain =
+    async () => {
+      const nextData: AppData = {
+        ...appData,
+        introStage: 'onboarding',
+      };
+
+      await saveAppData(
+        nextData
+      );
+
+      setAppData(
+        nextData
+      );
+
+      router.replace(
+        '/onboarding'
+      );
+    };
+
   return (
     <SafeAreaView
       style={[
@@ -475,6 +495,46 @@ export default function SettingsScreen() {
               },
             ]}
           >
+            <TouchableOpacity
+              style={[
+                styles.settingRow,
+                {
+                  borderBottomColor:
+                    currentTheme.border,
+                },
+              ]}
+              activeOpacity={0.7}
+              onPress={
+                openIntroAgain
+              }
+            >
+              <Text
+                style={[
+                  styles.settingTitle,
+                  {
+                    color:
+                      currentTheme.text,
+                  },
+                ]}
+              >
+                {isJapanese
+                  ? '初回説明を見る'
+                  : 'View Introduction'}
+              </Text>
+
+              <Text
+                style={[
+                  styles.chevron,
+                  {
+                    color:
+                      currentTheme.subText,
+                  },
+                ]}
+              >
+                ›
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={[
                 styles.settingRow,
