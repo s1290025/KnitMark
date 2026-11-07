@@ -162,8 +162,8 @@ export default function SettingsScreen() {
   const openPrivacyPolicy =
     async () => {
       const url = isJapanese
-        ? 'https://s1290025.github.io/KnitMark_support/ja/privacy.html'
-        : 'https://s1290025.github.io/KnitMark_support/privacy.html';
+        ? 'https://s1290025.github.io/KnitMark_share/ja/privacy.html'
+        : 'https://s1290025.github.io/KnitMark_share/privacy.html';
 
       try {
         await Linking.openURL(url);
