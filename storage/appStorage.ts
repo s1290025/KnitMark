@@ -40,12 +40,14 @@ export type AppData = {
   projects: Project[];
   language: Language;
   theme: ThemeName;
+  soundEnabled: boolean;
 };
 
 const defaultData: AppData = {
   projects: [],
   language: 'ja',
   theme: 'beige',
+  soundEnabled: true,
 };
 
 export async function loadAppData(): Promise<AppData> {
