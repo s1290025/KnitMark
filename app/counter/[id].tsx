@@ -1039,13 +1039,16 @@ export default function CounterScreen() {
                     currentTheme.text,
                 },
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
             >
               {number}
             </Text>
 
             <Text
               style={[
-                styles.counterUnitAbsolute,
+                styles.counterUnit,
 
                 landscape
                   ? [
@@ -1065,6 +1068,7 @@ export default function CounterScreen() {
                     currentTheme.text,
                 },
               ]}
+              numberOfLines={1}
             >
               {unit}
             </Text>
@@ -2282,13 +2286,17 @@ const styles =
 
     counterValueRow: {
       flex: 1,
-      position: 'relative',
-      alignItems: 'center',
+      minWidth: 0,
+      flexDirection: 'row',
+      alignItems: 'baseline',
       justifyContent:
         'center',
+      gap: 6,
+      paddingHorizontal: 4,
     },
 
     counterNumber: {
+      flexShrink: 1,
       fontWeight: '700',
       textAlign: 'center',
     },
@@ -2303,30 +2311,21 @@ const styles =
       lineHeight: 84,
     },
 
-    counterUnitAbsolute: {
-      position: 'absolute',
-      left: '50%',
-      marginLeft: 30,
-      bottom: 6,
+    counterUnit: {
+      flexShrink: 0,
       fontWeight: '400',
     },
 
     counterUnitLandscape: {
       fontSize: 25,
-      marginLeft: 34,
-      bottom: 5,
     },
 
     counterUnitLandscapeTablet: {
       fontSize: 32,
-      marginLeft: 48,
-      bottom: 10,
     },
 
     counterUnitTablet: {
       fontSize: 32,
-      marginLeft: 48,
-      bottom: 9,
     },
 
     nextButton: {
