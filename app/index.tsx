@@ -8,6 +8,7 @@ import {
 
 import {
   useCallback,
+  useEffect,
   useState,
 } from 'react';
 
@@ -144,6 +145,31 @@ export default function ProjectListScreen() {
       };
     }, [])
   );
+
+  useEffect(() => {
+    if (!appData) {
+      return;
+    }
+
+    if (
+      appData.introStage ===
+      'onboarding'
+    ) {
+      router.replace(
+        '/onboarding'
+      );
+      return;
+    }
+
+    if (
+      appData.introStage ===
+      'tutorial'
+    ) {
+      router.replace(
+        '/tutorial'
+      );
+    }
+  }, [appData]);
 
   if (!appData) {
     return (
