@@ -17,7 +17,6 @@ import {
     SafeAreaView,
     ScrollView,
     StyleSheet,
-    Switch,
     Text,
     TouchableOpacity,
     View,
@@ -130,22 +129,6 @@ export default function SettingsScreen() {
       );
 
       setThemeModalVisible(false);
-    };
-
-  const changeSound =
-    async (
-      soundEnabled: boolean
-    ) => {
-      const nextData: AppData = {
-        ...appData,
-        soundEnabled,
-      };
-
-      setAppData(nextData);
-
-      await saveAppData(
-        nextData
-      );
     };
 
   const themeLabels:
@@ -392,49 +375,6 @@ export default function SettingsScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
-
-            {/* Sound */}
-            <View
-              style={[
-                styles.settingRow,
-                {
-                  borderBottomColor:
-                    currentTheme.border,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.settingTitle,
-                  {
-                    color:
-                      currentTheme.text,
-                  },
-                ]}
-              >
-                {isJapanese
-                  ? '操作音'
-                  : 'Sound'}
-              </Text>
-
-              <Switch
-                value={
-                  appData.soundEnabled
-                }
-                onValueChange={
-                  changeSound
-                }
-                trackColor={{
-                  false:
-                    currentTheme.soft,
-                  true:
-                    currentTheme.accent,
-                }}
-                thumbColor={
-                  currentTheme.surface
-                }
-              />
             </View>
 
             {/* Theme */}
