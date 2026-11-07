@@ -1,4 +1,5 @@
 import EvilIcons from '@expo/vector-icons/EvilIcons';
+import Feather from '@expo/vector-icons/Feather';
 import { useAudioPlayer } from 'expo-audio';
 
 import {
@@ -34,6 +35,7 @@ import {
   Language,
   loadAppData,
   Project,
+  saveAppData,
   updateProject,
 } from '../../storage/appStorage';
 
@@ -199,6 +201,25 @@ export default function CounterScreen() {
           tapPlayer.play();
         })
         .catch(() => {});
+    };
+
+  const toggleSound =
+    async () => {
+      const nextSoundEnabled =
+        !soundEnabled;
+
+      setSoundEnabled(
+        nextSoundEnabled
+      );
+
+      const data =
+        await loadAppData();
+
+      await saveAppData({
+        ...data,
+        soundEnabled:
+          nextSoundEnabled,
+      });
     };
 
   const persistProject =
@@ -775,6 +796,44 @@ export default function CounterScreen() {
           styles.portraitActions
         }
       >
+        <TouchableOpacity
+          style={[
+            styles.soundButton,
+            {
+              backgroundColor:
+                currentTheme.soft,
+              borderColor:
+                currentTheme.accent,
+            },
+          ]}
+          activeOpacity={0.8}
+          onPress={
+            toggleSound
+          }
+          accessibilityRole="button"
+          accessibilityLabel={
+            soundEnabled
+              ? isJapanese
+                ? '操作音をオフにする'
+                : 'Turn sound off'
+              : isJapanese
+                ? '操作音をオンにする'
+                : 'Turn sound on'
+          }
+        >
+          <Feather
+            name={
+              soundEnabled
+                ? 'volume-2'
+                : 'volume-x'
+            }
+            size={23}
+            color={
+              currentTheme.text
+            }
+          />
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.markButton,
@@ -2007,6 +2066,18 @@ const styles =
 
     markButtonTextLandscape: {
       fontSize: 13,
+    },
+
+    soundButton: {
+      position: 'absolute',
+      left: 0,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent:
+        'center',
+      borderWidth: 1.5,
     },
 
     undoButton: {
