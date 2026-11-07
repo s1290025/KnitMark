@@ -36,11 +36,17 @@ export type Project = {
   undoStack: CounterState[];
 };
 
+export type IntroStage =
+  | 'onboarding'
+  | 'tutorial'
+  | 'done';
+
 export type AppData = {
   projects: Project[];
   language: Language;
   theme: ThemeName;
   soundEnabled: boolean;
+  introStage: IntroStage;
 };
 
 const defaultData: AppData = {
@@ -48,6 +54,7 @@ const defaultData: AppData = {
   language: 'ja',
   theme: 'beige',
   soundEnabled: true,
+  introStage: 'onboarding',
 };
 
 export async function loadAppData(): Promise<AppData> {
@@ -66,6 +73,12 @@ export async function loadAppData(): Promise<AppData> {
     return {
       ...defaultData,
       ...parsed,
+
+      // Users who already had app data before the onboarding
+      // feature was added should continue directly to the app.
+      introStage:
+        parsed.introStage ??
+        'done',
     };
   } catch (error) {
     console.error(
