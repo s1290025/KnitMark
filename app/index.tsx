@@ -171,7 +171,11 @@ export default function ProjectListScreen() {
     }
   }, [appData]);
 
-  if (!appData) {
+  if (
+    !appData ||
+    appData.introStage !==
+      'done'
+  ) {
     return (
       <SafeAreaView
         style={
