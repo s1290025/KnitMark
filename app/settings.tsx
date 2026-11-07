@@ -140,6 +140,25 @@ export default function SettingsScreen() {
     black: 'Black',
   };
 
+  const openContactForm =
+    async () => {
+      const url =
+        'https://docs.google.com/forms/d/e/1FAIpQLScTfycUACW0nB-oMRpTWPwfped8-hMe3VPU91w6Vp2cTNvaTg/viewform?usp=publish-editor';
+
+      try {
+        await Linking.openURL(url);
+      } catch {
+        Alert.alert(
+          isJapanese
+            ? 'エラー'
+            : 'Error',
+          isJapanese
+            ? 'お問い合わせフォームを開けませんでした。'
+            : 'Could not open the contact form.'
+        );
+      }
+    };
+
   const openPrivacyPolicy =
     async () => {
       const url = isJapanese
@@ -456,6 +475,46 @@ export default function SettingsScreen() {
               },
             ]}
           >
+            <TouchableOpacity
+              style={[
+                styles.settingRow,
+                {
+                  borderBottomColor:
+                    currentTheme.border,
+                },
+              ]}
+              activeOpacity={0.7}
+              onPress={
+                openContactForm
+              }
+            >
+              <Text
+                style={[
+                  styles.settingTitle,
+                  {
+                    color:
+                      currentTheme.text,
+                  },
+                ]}
+              >
+                {isJapanese
+                  ? 'お問い合わせ'
+                  : 'Contact'}
+              </Text>
+
+              <Text
+                style={[
+                  styles.chevron,
+                  {
+                    color:
+                      currentTheme.subText,
+                  },
+                ]}
+              >
+                ›
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={
                 styles.settingRowLast
