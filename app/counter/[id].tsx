@@ -277,7 +277,10 @@ export default function CounterScreen() {
         ...project.history,
       ];
 
-      if (project.stitch > 0) {
+      if (
+        project.row > 0 ||
+        project.stitch > 0
+      ) {
         history =
           removePausedHistory(
             history
