@@ -1,4 +1,5 @@
 import EvilIcons from '@expo/vector-icons/EvilIcons';
+import { useAudioPlayer } from 'expo-audio';
 
 import {
   router,
@@ -97,6 +98,16 @@ export default function CounterScreen() {
     useState<keyof typeof themes>('beige');
 
   const [
+    soundEnabled,
+    setSoundEnabled,
+  ] = useState(true);
+
+  const tapPlayer =
+    useAudioPlayer(
+      require('../../assets/sounds/tap.wav')
+    );
+
+  const [
     historyModalVisible,
     setHistoryModalVisible,
   ] = useState(false);
@@ -136,6 +147,9 @@ export default function CounterScreen() {
           setProject(savedProject);
           setLanguage(data.language);
           setThemeName(data.theme);
+          setSoundEnabled(
+            data.soundEnabled
+          );
         }
       };
 
@@ -172,6 +186,20 @@ export default function CounterScreen() {
 
   const isJapanese =
     language === 'ja';
+
+  const playTapSound =
+    () => {
+      if (!soundEnabled) {
+        return;
+      }
+
+      void tapPlayer
+        .seekTo(0)
+        .then(() => {
+          tapPlayer.play();
+        })
+        .catch(() => {});
+    };
 
   const persistProject =
     async (
@@ -212,6 +240,8 @@ export default function CounterScreen() {
   };
 
   const addRow = async () => {
+    playTapSound();
+
     const previous =
       saveUndo(project);
 
@@ -254,6 +284,8 @@ export default function CounterScreen() {
 
   const addStitch =
     async () => {
+      playTapSound();
+
       const previous =
         saveUndo(project);
 
