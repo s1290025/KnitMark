@@ -879,20 +879,6 @@ export default function ProjectListScreen() {
                           close
                         }
                       >
-                        {isCreate &&
-                          isTutorial &&
-                          tutorialStep ===
-                            'createForm' && (
-                            <Animated.View
-                              pointerEvents="none"
-                              style={[
-                                styles.tutorialPulseRing,
-                                styles.tutorialPulseButton,
-                                pulseStyle,
-                              ]}
-                            />
-                          )}
-
                         <Text
                           style={{
                             color:
@@ -932,6 +918,20 @@ export default function ProjectListScreen() {
                           ''
                         }
                       >
+                        {isCreate &&
+                          isTutorial &&
+                          tutorialStep ===
+                            'createForm' && (
+                            <Animated.View
+                              pointerEvents="none"
+                              style={[
+                                styles.tutorialPulseRing,
+                                styles.tutorialPulseButton,
+                                pulseStyle,
+                              ]}
+                            />
+                          )}
+
                         <Text
                           style={{
                             color:
