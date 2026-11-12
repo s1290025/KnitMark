@@ -45,11 +45,14 @@ export type TutorialStep =
   | 'create'
   | 'createForm'
   | 'openProject'
-  | 'row'
-  | 'stitch'
+  | 'row1'
+  | 'stitch1'
+  | 'row2'
+  | 'stitch2'
   | 'progress'
+  | 'stitchSeparator'
   | 'undo'
-  | 'separator'
+  | 'rowSeparator'
   | 'editProject'
   | 'deleteProject'
   | 'complete';
@@ -87,9 +90,21 @@ export async function loadAppData(): Promise<AppData> {
     const parsed =
       JSON.parse(raw);
 
+    const migratedTutorialStep =
+      parsed.tutorialStep === 'row'
+        ? 'row1'
+        : parsed.tutorialStep === 'stitch'
+          ? 'stitch1'
+          : parsed.tutorialStep === 'separator'
+            ? 'rowSeparator'
+            : parsed.tutorialStep;
+
     return {
       ...defaultData,
       ...parsed,
+      tutorialStep:
+        migratedTutorialStep ??
+        defaultData.tutorialStep,
 
       // Users who already had app data before the onboarding
       // feature was added should continue directly to the app.
