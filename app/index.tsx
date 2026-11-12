@@ -2111,6 +2111,10 @@ const styles =
       borderWidth: 1,
     },
 
+    projectCardTutorial: {
+      overflow: 'visible',
+    },
+
     projectCardSmall: {
       minHeight: 86,
       borderRadius: 18,
