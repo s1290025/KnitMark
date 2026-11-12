@@ -161,20 +161,13 @@ export default function ProjectListScreen() {
       return;
     }
 
-    if (
-      appData.introStage ===
-      'tutorial'
-    ) {
-      router.replace(
-        '/tutorial'
-      );
-    }
+
   }, [appData]);
 
   if (
     !appData ||
-    appData.introStage !==
-      'done'
+    appData.introStage ===
+      'onboarding'
   ) {
     return (
       <SafeAreaView
@@ -201,14 +194,51 @@ export default function ProjectListScreen() {
   const isJapanese =
     appData.language === 'ja';
 
+  const isTutorial =
+    appData.introStage ===
+    'tutorial';
+
+  const tutorialStep =
+    appData.tutorialStep;
+
+  const updateTutorial =
+    async (
+      updates: Partial<AppData>
+    ) => {
+      const nextData: AppData = {
+        ...appData,
+        ...updates,
+      };
+
+      setAppData(nextData);
+      await saveAppData(nextData);
+    };
+
   const openCreateModal =
-    () => {
-      setProjectName('');
+    async () => {
+      const tutorialCreating =
+        isTutorial &&
+        tutorialStep === 'create';
+
+      setProjectName(
+        tutorialCreating
+          ? isJapanese
+            ? '練習作品'
+            : 'Practice Project'
+          : ''
+      );
       setMemo('');
 
       setCreateModalVisible(
         true
       );
+
+      if (tutorialCreating) {
+        await updateTutorial({
+          tutorialStep:
+            'createForm',
+        });
+      }
     };
 
   const closeCreateModal =
@@ -250,6 +280,11 @@ export default function ProjectListScreen() {
         undoStack: [],
       };
 
+      const tutorialCreating =
+        isTutorial &&
+        tutorialStep ===
+          'createForm';
+
       const nextData:
         AppData = {
         ...appData,
@@ -258,6 +293,15 @@ export default function ProjectListScreen() {
           ...appData.projects,
           project,
         ],
+
+        ...(tutorialCreating
+          ? {
+              tutorialStep:
+                'openProject' as const,
+              tutorialProjectId:
+                project.id,
+            }
+          : {}),
       };
 
       await saveAppData(
@@ -269,18 +313,31 @@ export default function ProjectListScreen() {
       closeCreateModal();
     };
 
-  const openProject = (
-    project: Project
-  ) => {
-    router.push({
-      pathname:
-        '/counter/[id]',
+  const openProject =
+    async (
+      project: Project
+    ) => {
+      if (
+        isTutorial &&
+        tutorialStep ===
+          'openProject' &&
+        appData.tutorialProjectId ===
+          project.id
+      ) {
+        await updateTutorial({
+          tutorialStep: 'row',
+        });
+      }
 
-      params: {
-        id: project.id,
-      },
-    });
-  };
+      router.push({
+        pathname:
+          '/counter/[id]',
+
+        params: {
+          id: project.id,
+        },
+      });
+    };
 
   const openSettings =
     () => {
@@ -537,6 +594,37 @@ export default function ProjectListScreen() {
                       false
                     }
                   >
+                    {isCreate &&
+                      isTutorial &&
+                      tutorialStep ===
+                        'createForm' && (
+                        <View
+                          style={[
+                            styles.tutorialBanner,
+                            {
+                              backgroundColor:
+                                currentTheme.soft,
+                              borderColor:
+                                currentTheme.accent,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.tutorialBannerText,
+                              {
+                                color:
+                                  currentTheme.text,
+                              },
+                            ]}
+                          >
+                            {isJapanese
+                              ? '作品名は入れてあります。「作成」を押してください。'
+                              : 'A practice name is ready. Tap Create.'}
+                          </Text>
+                        </View>
+                      )}
+
                     <Text
                       style={[
                         styles.modalTitle,
@@ -707,6 +795,12 @@ export default function ProjectListScreen() {
                               currentTheme.accent,
                           },
 
+                          isCreate &&
+                            isTutorial &&
+                            tutorialStep ===
+                              'createForm' &&
+                            styles.tutorialTarget,
+
                           name.trim() ===
                             '' &&
                             styles.disabledButton,
@@ -807,6 +901,9 @@ export default function ProjectListScreen() {
         <View
           style={[
             styles.header,
+
+            isTutorial &&
+              styles.tutorialDim,
 
             isSmallScreen &&
               styles.headerSmall,
@@ -913,6 +1010,20 @@ export default function ProjectListScreen() {
                     borderColor:
                       currentTheme.border,
                   },
+
+                  isTutorial &&
+                    tutorialStep ===
+                      'openProject' &&
+                    appData.tutorialProjectId ===
+                      project.id &&
+                    styles.tutorialTarget,
+
+                  isTutorial &&
+                    tutorialStep ===
+                      'openProject' &&
+                    appData.tutorialProjectId !==
+                      project.id &&
+                    styles.tutorialDim,
                 ]}
               >
                 <TouchableOpacity
@@ -1051,6 +1162,16 @@ export default function ProjectListScreen() {
                 backgroundColor:
                   currentTheme.accent,
               },
+
+              isTutorial &&
+                tutorialStep ===
+                  'create' &&
+                styles.tutorialTarget,
+
+              isTutorial &&
+                tutorialStep !==
+                  'create' &&
+                styles.tutorialDim,
             ]}
             onPress={
               openCreateModal
@@ -1073,6 +1194,42 @@ export default function ProjectListScreen() {
             </Text>
           </TouchableOpacity>
         )}
+
+        {isTutorial &&
+          !createModalVisible && (
+            <View
+              pointerEvents="none"
+              style={[
+                styles.tutorialMessage,
+                {
+                  backgroundColor:
+                    currentTheme.text,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tutorialMessageText,
+                  {
+                    color:
+                      currentTheme.background,
+                  },
+                ]}
+              >
+                {tutorialStep ===
+                'create'
+                  ? isJapanese
+                    ? 'まず、右下の＋を押して作品を作ります。'
+                    : 'First, tap + to create a project.'
+                  : tutorialStep ===
+                      'openProject'
+                    ? isJapanese
+                      ? '作った「練習作品」をタップして開きます。'
+                      : 'Tap the Practice Project to open it.'
+                    : ''}
+              </Text>
+            </View>
+          )}
 
         <Modal
           visible={
@@ -1124,6 +1281,59 @@ export default function ProjectListScreen() {
 
 const styles =
   StyleSheet.create({
+    tutorialDim: {
+      opacity: 0.22,
+    },
+
+    tutorialTarget: {
+      zIndex: 100,
+      elevation: 20,
+      borderWidth: 4,
+      borderColor: '#7A4E32',
+      transform: [
+        { scale: 1.035 },
+      ],
+      shadowColor: '#000',
+      shadowOpacity: 0.3,
+      shadowRadius: 14,
+      shadowOffset: {
+        width: 0,
+        height: 6,
+      },
+    },
+
+    tutorialMessage: {
+      position: 'absolute',
+      left: 20,
+      right: 20,
+      bottom: 112,
+      zIndex: 80,
+      borderRadius: 18,
+      paddingHorizontal: 18,
+      paddingVertical: 14,
+    },
+
+    tutorialMessageText: {
+      fontSize: 16,
+      lineHeight: 23,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+
+    tutorialBanner: {
+      borderWidth: 2,
+      borderRadius: 16,
+      padding: 14,
+      marginBottom: 16,
+    },
+
+    tutorialBannerText: {
+      fontSize: 15,
+      lineHeight: 22,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+
     loadingSafeArea: {
       flex: 1,
       backgroundColor:
