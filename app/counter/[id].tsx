@@ -200,6 +200,73 @@ export default function CounterScreen() {
     };
   }, [tutorialPulse]);
 
+  useEffect(() => {
+    if (
+      tutorialStep === null ||
+      !rootRef.current ||
+      !project
+    ) {
+      setTutorialTarget(null);
+      return;
+    }
+
+    const ref =
+      tutorialStep === 'row1' ||
+      tutorialStep === 'row2'
+        ? rowPlusRef
+        : tutorialStep === 'stitch1' ||
+            tutorialStep === 'stitch2'
+          ? stitchPlusRef
+          : tutorialStep === 'progress'
+            ? progressRef
+            : tutorialStep ===
+                'stitchSeparator'
+              ? stitchSeparatorRef
+              : tutorialStep === 'undo'
+                ? undoRef
+                : tutorialStep ===
+                    'rowSeparator'
+                  ? rowSeparatorRef
+                  : null;
+
+    if (!ref?.current) {
+      setTutorialTarget(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      ref.current?.measureLayout(
+        rootRef.current,
+        (
+          x: number,
+          y: number,
+          measuredWidth: number,
+          measuredHeight: number
+        ) => {
+          setTutorialTarget({
+            x,
+            y,
+            width: measuredWidth,
+            height: measuredHeight,
+          });
+        },
+        () => {
+          setTutorialTarget(null);
+        }
+      );
+    }, 80);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [
+    tutorialStep,
+    width,
+    height,
+    project?.row,
+    project?.stitch,
+  ]);
+
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -305,77 +372,7 @@ export default function CounterScreen() {
     ],
   };
 
-  useEffect(() => {
-    if (
-      !isTutorial ||
-      !tutorialStep ||
-      !rootRef.current
-    ) {
-      setTutorialTarget(null);
-      return;
-    }
 
-    const ref =
-      tutorialStep === 'row1' ||
-      tutorialStep === 'row2'
-        ? rowPlusRef
-        : tutorialStep ===
-              'stitch1' ||
-            tutorialStep ===
-              'stitch2'
-          ? stitchPlusRef
-          : tutorialStep ===
-              'progress'
-            ? progressRef
-            : tutorialStep ===
-                'stitchSeparator'
-              ? stitchSeparatorRef
-              : tutorialStep ===
-                  'undo'
-                ? undoRef
-                : tutorialStep ===
-                    'rowSeparator'
-                  ? rowSeparatorRef
-                  : null;
-
-    if (!ref?.current) {
-      setTutorialTarget(null);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      ref.current?.measureLayout(
-        rootRef.current,
-        (
-          x: number,
-          y: number,
-          measuredWidth: number,
-          measuredHeight: number
-        ) => {
-          setTutorialTarget({
-            x,
-            y,
-            width: measuredWidth,
-            height: measuredHeight,
-          });
-        },
-        () => {
-          setTutorialTarget(null);
-        }
-      );
-    }, 80);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [
-    isTutorial,
-    tutorialStep,
-    width,
-    height,
-    project.row,
-    project.stitch,
-  ]);
 
   const advanceTutorial =
     async (
