@@ -49,6 +49,8 @@ export type TutorialStep =
   | 'stitch'
   | 'progress'
   | 'undo'
+  | 'editProject'
+  | 'deleteProject'
   | 'complete';
 
 export type AppData = {
