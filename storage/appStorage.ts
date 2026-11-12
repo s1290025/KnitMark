@@ -47,8 +47,6 @@ export type TutorialStep =
   | 'openProject'
   | 'row1'
   | 'stitch1'
-  | 'row2'
-  | 'stitch2'
   | 'progress'
   | 'stitchSeparator'
   | 'undo'
@@ -91,9 +89,11 @@ export async function loadAppData(): Promise<AppData> {
       JSON.parse(raw);
 
     const migratedTutorialStep =
-      parsed.tutorialStep === 'row'
+      parsed.tutorialStep === 'row' ||
+      parsed.tutorialStep === 'row2'
         ? 'row1'
-        : parsed.tutorialStep === 'stitch'
+        : parsed.tutorialStep === 'stitch' ||
+            parsed.tutorialStep === 'stitch2'
           ? 'stitch1'
           : parsed.tutorialStep === 'separator'
             ? 'rowSeparator'
