@@ -9,12 +9,14 @@ import {
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -124,6 +126,11 @@ export default function ProjectListScreen() {
     setEditMemo,
   ] = useState('');
 
+  const tutorialPulse =
+    useRef(
+      new Animated.Value(0)
+    ).current;
+
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -145,6 +152,36 @@ export default function ProjectListScreen() {
       };
     }, [])
   );
+
+  useEffect(() => {
+    const loop =
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(
+            tutorialPulse,
+            {
+              toValue: 1,
+              duration: 900,
+              useNativeDriver: true,
+            }
+          ),
+          Animated.timing(
+            tutorialPulse,
+            {
+              toValue: 0,
+              duration: 900,
+              useNativeDriver: true,
+            }
+          ),
+        ])
+      );
+
+    loop.start();
+
+    return () => {
+      loop.stop();
+    };
+  }, [tutorialPulse]);
 
   useEffect(() => {
     if (!appData) {
@@ -200,6 +237,32 @@ export default function ProjectListScreen() {
 
   const tutorialStep =
     appData.tutorialStep;
+
+  const tutorialStepNumber =
+    tutorialStep === 'create'
+      ? 1
+      : tutorialStep ===
+          'createForm'
+        ? 2
+        : 3;
+
+  const pulseStyle = {
+    opacity:
+      tutorialPulse.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.55, 0.12],
+      }),
+
+    transform: [
+      {
+        scale:
+          tutorialPulse.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 1.18],
+          }),
+      },
+    ],
+  };
 
   const updateTutorial =
     async (
@@ -627,13 +690,25 @@ export default function ProjectListScreen() {
                               backgroundColor:
                                 currentTheme.soft,
                               borderColor:
-                                currentTheme.accent,
+                                currentTheme.border,
                             },
                           ]}
                         >
                           <Text
                             style={[
-                              styles.tutorialBannerText,
+                              styles.tutorialStepBadgeText,
+                              {
+                                color:
+                                  currentTheme.subText,
+                              },
+                            ]}
+                          >
+                            2 / 7
+                          </Text>
+
+                          <Text
+                            style={[
+                              styles.tutorialBannerTitle,
                               {
                                 color:
                                   currentTheme.text,
@@ -641,8 +716,22 @@ export default function ProjectListScreen() {
                             ]}
                           >
                             {isJapanese
-                              ? '作品名は入れてあります。「作成」を押してください。'
-                              : 'A practice name is ready. Tap Create.'}
+                              ? '作品を作成'
+                              : 'Create the project'}
+                          </Text>
+
+                          <Text
+                            style={[
+                              styles.tutorialBannerText,
+                              {
+                                color:
+                                  currentTheme.subText,
+                              },
+                            ]}
+                          >
+                            {isJapanese
+                              ? '名前は入力済みです。下の「作成」をタップしてください。'
+                              : 'The name is ready. Tap Create below.'}
                           </Text>
                         </View>
                       )}
@@ -790,6 +879,19 @@ export default function ProjectListScreen() {
                           close
                         }
                       >
+                        {isCreate &&
+                          isTutorial &&
+                          tutorialStep ===
+                            'createForm' && (
+                            <Animated.View
+                              pointerEvents="none"
+                              style={[
+                                styles.tutorialPulseRing,
+                                pulseStyle,
+                              ]}
+                            />
+                          )}
+
                         <Text
                           style={{
                             color:
@@ -1048,6 +1150,21 @@ export default function ProjectListScreen() {
                     styles.tutorialDim,
                 ]}
               >
+                {isTutorial &&
+                  tutorialStep ===
+                    'openProject' &&
+                  appData.tutorialProjectId ===
+                    project.id && (
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[
+                        styles.tutorialPulseRing,
+                        styles.tutorialPulseCard,
+                        pulseStyle,
+                      ]}
+                    />
+                  )}
+
                 <TouchableOpacity
                   style={[
                     styles.projectInfoButton,
@@ -1200,6 +1317,18 @@ export default function ProjectListScreen() {
               openCreateModal
             }
           >
+            {isTutorial &&
+              tutorialStep ===
+                'create' && (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.tutorialPulseRing,
+                    pulseStyle,
+                  ]}
+                />
+              )}
+
             <Text
               style={[
                 styles.addButtonText,
@@ -1226,31 +1355,81 @@ export default function ProjectListScreen() {
                 styles.tutorialMessage,
                 {
                   backgroundColor:
-                    currentTheme.text,
+                    currentTheme.surface,
+                  borderColor:
+                    currentTheme.border,
                 },
               ]}
             >
+              <View
+                style={[
+                  styles.tutorialStepBadge,
+                  {
+                    backgroundColor:
+                      currentTheme.soft,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tutorialStepBadgeText,
+                    {
+                      color:
+                        currentTheme.text,
+                    },
+                  ]}
+                >
+                  {tutorialStepNumber} / 7
+                </Text>
+              </View>
+
               <Text
                 style={[
-                  styles.tutorialMessageText,
+                  styles.tutorialMessageTitle,
                   {
                     color:
-                      currentTheme.background,
+                      currentTheme.text,
                   },
                 ]}
               >
                 {tutorialStep ===
                 'create'
                   ? isJapanese
-                    ? 'まず、右下の＋を押して作品を作ります。'
-                    : 'First, tap + to create a project.'
-                  : tutorialStep ===
-                      'openProject'
-                    ? isJapanese
-                      ? '作った「練習作品」をタップして開きます。'
-                      : 'Tap the Practice Project to open it.'
-                    : ''}
+                    ? '作品を作ってみましょう'
+                    : 'Create a project'
+                  : isJapanese
+                    ? '練習作品を開きます'
+                    : 'Open the practice project'}
               </Text>
+
+              <Text
+                style={[
+                  styles.tutorialMessageText,
+                  {
+                    color:
+                      currentTheme.subText,
+                  },
+                ]}
+              >
+                {tutorialStep ===
+                'create'
+                  ? isJapanese
+                    ? '光っている＋ボタンをタップしてください。'
+                    : 'Tap the highlighted + button.'
+                  : isJapanese
+                    ? '光っている「練習作品」をタップしてください。'
+                    : 'Tap the highlighted Practice Project.'}
+              </Text>
+
+              <View
+                style={[
+                  styles.tutorialPointer,
+                  {
+                    borderTopColor:
+                      currentTheme.surface,
+                  },
+                ]}
+              />
             </View>
           )}
 
@@ -1305,24 +1484,36 @@ export default function ProjectListScreen() {
 const styles =
   StyleSheet.create({
     tutorialDim: {
-      opacity: 0.22,
+      opacity: 0.16,
     },
 
     tutorialTarget: {
       zIndex: 100,
       elevation: 20,
-      borderWidth: 4,
-      borderColor: '#7A4E32',
-      transform: [
-        { scale: 1.035 },
-      ],
+      borderWidth: 2.5,
+      borderColor: '#8B684F',
       shadowColor: '#000',
-      shadowOpacity: 0.3,
-      shadowRadius: 14,
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
       shadowOffset: {
         width: 0,
-        height: 6,
+        height: 5,
       },
+    },
+
+    tutorialPulseRing: {
+      position: 'absolute',
+      top: -7,
+      right: -7,
+      bottom: -7,
+      left: -7,
+      borderWidth: 3,
+      borderColor: '#8B684F',
+      borderRadius: 999,
+    },
+
+    tutorialPulseCard: {
+      borderRadius: 24,
     },
 
     tutorialMessage: {
@@ -1331,30 +1522,81 @@ const styles =
       right: 20,
       bottom: 112,
       zIndex: 80,
-      borderRadius: 18,
+      borderRadius: 22,
+      borderWidth: 1,
       paddingHorizontal: 18,
-      paddingVertical: 14,
+      paddingTop: 15,
+      paddingBottom: 17,
+      shadowColor: '#000',
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+      elevation: 7,
+    },
+
+    tutorialStepBadge: {
+      alignSelf: 'flex-start',
+      minWidth: 48,
+      minHeight: 26,
+      paddingHorizontal: 9,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+
+    tutorialStepBadgeText: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 0.3,
+    },
+
+    tutorialMessageTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      marginBottom: 4,
     },
 
     tutorialMessageText: {
-      fontSize: 16,
-      lineHeight: 23,
-      fontWeight: '700',
-      textAlign: 'center',
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '500',
+    },
+
+    tutorialPointer: {
+      position: 'absolute',
+      right: 30,
+      bottom: -12,
+      width: 0,
+      height: 0,
+      borderLeftWidth: 12,
+      borderRightWidth: 12,
+      borderTopWidth: 12,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
     },
 
     tutorialBanner: {
-      borderWidth: 2,
-      borderRadius: 16,
-      padding: 14,
-      marginBottom: 16,
+      borderWidth: 1,
+      borderRadius: 18,
+      padding: 15,
+      marginBottom: 18,
+    },
+
+    tutorialBannerTitle: {
+      fontSize: 17,
+      fontWeight: '800',
+      marginTop: 4,
+      marginBottom: 4,
     },
 
     tutorialBannerText: {
-      fontSize: 15,
-      lineHeight: 22,
-      fontWeight: '700',
-      textAlign: 'center',
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '500',
     },
 
     loadingSafeArea: {
