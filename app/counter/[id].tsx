@@ -139,6 +139,32 @@ export default function CounterScreen() {
     setMemoDraft,
   ] = useState('');
 
+  const rootRef =
+    useRef<View | null>(null);
+
+  const rowPlusRef =
+    useRef<any>(null);
+  const stitchPlusRef =
+    useRef<any>(null);
+  const rowSeparatorRef =
+    useRef<any>(null);
+  const stitchSeparatorRef =
+    useRef<any>(null);
+  const progressRef =
+    useRef<any>(null);
+  const undoRef =
+    useRef<any>(null);
+
+  const [
+    tutorialTarget,
+    setTutorialTarget,
+  ] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
   const tutorialPulse =
     useRef(
       new Animated.Value(0)
@@ -247,16 +273,17 @@ export default function CounterScreen() {
     tutorialStep !== null;
 
   const tutorialStepNumber =
-    tutorialStep === 'row'
+    tutorialStep === 'row1' ||
+    tutorialStep === 'stitch1'
       ? 4
-      : tutorialStep ===
-          'stitch'
+      : tutorialStep === 'row2' ||
+          tutorialStep === 'stitch2'
         ? 5
-        : tutorialStep ===
-            'progress'
+        : tutorialStep === 'progress' ||
+            tutorialStep ===
+              'stitchSeparator'
           ? 6
-          : tutorialStep ===
-              'undo'
+          : tutorialStep === 'undo'
             ? 7
             : 8;
 
@@ -277,6 +304,78 @@ export default function CounterScreen() {
       },
     ],
   };
+
+  useEffect(() => {
+    if (
+      !isTutorial ||
+      !tutorialStep ||
+      !rootRef.current
+    ) {
+      setTutorialTarget(null);
+      return;
+    }
+
+    const ref =
+      tutorialStep === 'row1' ||
+      tutorialStep === 'row2'
+        ? rowPlusRef
+        : tutorialStep ===
+              'stitch1' ||
+            tutorialStep ===
+              'stitch2'
+          ? stitchPlusRef
+          : tutorialStep ===
+              'progress'
+            ? progressRef
+            : tutorialStep ===
+                'stitchSeparator'
+              ? stitchSeparatorRef
+              : tutorialStep ===
+                  'undo'
+                ? undoRef
+                : tutorialStep ===
+                    'rowSeparator'
+                  ? rowSeparatorRef
+                  : null;
+
+    if (!ref?.current) {
+      setTutorialTarget(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      ref.current?.measureLayout(
+        rootRef.current,
+        (
+          x: number,
+          y: number,
+          measuredWidth: number,
+          measuredHeight: number
+        ) => {
+          setTutorialTarget({
+            x,
+            y,
+            width: measuredWidth,
+            height: measuredHeight,
+          });
+        },
+        () => {
+          setTutorialTarget(null);
+        }
+      );
+    }, 80);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [
+    isTutorial,
+    tutorialStep,
+    width,
+    height,
+    project.row,
+    project.stitch,
+  ]);
 
   const advanceTutorial =
     async (
@@ -378,7 +477,8 @@ export default function CounterScreen() {
   const addRow = async () => {
     if (
       isTutorial &&
-      tutorialStep !== 'row'
+      tutorialStep !== 'row1' &&
+      tutorialStep !== 'row2'
     ) {
       return;
     }
@@ -425,10 +525,18 @@ export default function CounterScreen() {
     });
 
     if (
-      tutorialStep === 'row'
+      tutorialStep === 'row1'
     ) {
       await advanceTutorial(
-        'stitch'
+        'stitch1'
+      );
+    }
+
+    if (
+      tutorialStep === 'row2'
+    ) {
+      await advanceTutorial(
+        'stitch2'
       );
     }
   };
@@ -438,7 +546,9 @@ export default function CounterScreen() {
       if (
         isTutorial &&
         tutorialStep !==
-          'stitch'
+          'stitch1' &&
+        tutorialStep !==
+          'stitch2'
       ) {
         return;
       }
@@ -458,9 +568,23 @@ export default function CounterScreen() {
         ],
       });
 
+      const nextStitch =
+        project.stitch + 1;
+
       if (
         tutorialStep ===
-          'stitch'
+          'stitch1' &&
+        nextStitch >= 3
+      ) {
+        await advanceTutorial(
+          'row2'
+        );
+      }
+
+      if (
+        tutorialStep ===
+          'stitch2' &&
+        nextStitch >= 3
       ) {
         await advanceTutorial(
           'progress'
@@ -473,7 +597,7 @@ export default function CounterScreen() {
       if (
         isTutorial &&
         tutorialStep !==
-          'separator'
+          'rowSeparator'
       ) {
         return;
       }
@@ -520,7 +644,11 @@ export default function CounterScreen() {
 
   const startNewStitch =
     async () => {
-      if (isTutorial) {
+      if (
+        isTutorial &&
+        tutorialStep !==
+          'stitchSeparator'
+      ) {
         return;
       }
 
@@ -604,7 +732,7 @@ export default function CounterScreen() {
           'progress'
       ) {
         await advanceTutorial(
-          'undo'
+          'stitchSeparator'
         );
       }
     };
@@ -648,7 +776,7 @@ export default function CounterScreen() {
       tutorialStep === 'undo'
     ) {
       await advanceTutorial(
-        'separator'
+        'rowSeparator'
       );
     }
   };
@@ -978,89 +1106,6 @@ export default function CounterScreen() {
     </View>
   );
 
-  const renderTutorialBubble = (
-    title: string,
-    body: string,
-    position:
-      | 'above'
-      | 'below'
-      | 'aboveRight'
-  ) => (
-    <View
-      pointerEvents="none"
-      style={[
-        styles.anchoredBubble,
-        position === 'above' &&
-          styles.anchoredBubbleAbove,
-        position === 'below' &&
-          styles.anchoredBubbleBelow,
-        position ===
-          'aboveRight' &&
-          styles.anchoredBubbleAboveRight,
-        {
-          backgroundColor:
-            currentTheme.surface,
-          borderColor:
-            currentTheme.border,
-        },
-      ]}
-    >
-      <Text
-        style={[
-          styles.anchoredBubbleStep,
-          {
-            color:
-              currentTheme.subText,
-          },
-        ]}
-      >
-        {tutorialStepNumber} / 11
-      </Text>
-
-      <Text
-        style={[
-          styles.anchoredBubbleTitle,
-          {
-            color:
-              currentTheme.text,
-          },
-        ]}
-      >
-        {title}
-      </Text>
-
-      <Text
-        style={[
-          styles.anchoredBubbleText,
-          {
-            color:
-              currentTheme.subText,
-          },
-        ]}
-      >
-        {body}
-      </Text>
-
-      <View
-        style={[
-          styles.anchoredBubblePointer,
-          position === 'below'
-            ? styles.anchoredBubblePointerUp
-            : styles.anchoredBubblePointerDown,
-          position === 'below'
-            ? {
-                borderBottomColor:
-                  currentTheme.surface,
-              }
-            : {
-                borderTopColor:
-                  currentTheme.surface,
-              },
-        ]}
-      />
-    </View>
-  );
-
   const renderPortraitActions =
     () => (
       <View
@@ -1110,6 +1155,7 @@ export default function CounterScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          ref={progressRef}
           style={[
             styles.markButton,
             {
@@ -1127,19 +1173,6 @@ export default function CounterScreen() {
           activeOpacity={0.8}
           onPress={addMark}
         >
-          {isTutorial &&
-            tutorialStep ===
-              'progress' &&
-            renderTutorialBubble(
-              isJapanese
-                ? '途中を記録'
-                : 'Save Progress',
-              isJapanese
-                ? '今の段数・目数を「途中」として履歴に残します。'
-                : 'Save the current row and stitch count as a progress marker.',
-              'below'
-            )}
-
           {isTutorial &&
             tutorialStep ===
               'progress' && (
@@ -1169,6 +1202,7 @@ export default function CounterScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          ref={undoRef}
           style={[
             styles.undoButton,
             {
@@ -1193,19 +1227,6 @@ export default function CounterScreen() {
               .length === 0
           }
         >
-          {isTutorial &&
-            tutorialStep ===
-              'undo' &&
-            renderTutorialBubble(
-              isJapanese
-                ? 'Undo'
-                : 'Undo',
-              isJapanese
-                ? '直前の操作を1つ取り消します。'
-                : 'Undo the most recent action.',
-              'below'
-            )}
-
           {isTutorial &&
             tutorialStep ===
               'undo' && (
@@ -1341,7 +1362,7 @@ export default function CounterScreen() {
 
           isTutorial &&
             ((tutorialStep ===
-                'row' &&
+                'row1' &&
               !isRow) ||
               (tutorialStep ===
                 'stitch' &&
@@ -1436,6 +1457,11 @@ export default function CounterScreen() {
           </View>
 
           <TouchableOpacity
+            ref={
+              isRow
+                ? rowSeparatorRef
+                : stitchSeparatorRef
+            }
             style={[
               styles.nextButton,
 
@@ -1465,23 +1491,12 @@ export default function CounterScreen() {
             }
           >
             {isTutorial &&
-              tutorialStep ===
-                'separator' &&
-              isRow &&
-              renderTutorialBubble(
-                isJapanese
-                  ? '│→ で区切る'
-                  : 'Use │→ to separate',
-                isJapanese
-                  ? '段側の│→は、今の段数・目数を履歴に残して両方を0にします。目側では目数だけを記録して0にします。'
-                  : 'On Rows, │→ saves the current row and stitch counts and resets both. On Stitches, it saves and resets only stitches.',
-                'aboveRight'
-              )}
-
-            {isTutorial &&
-              tutorialStep ===
-                'separator' &&
-              isRow && (
+              ((tutorialStep ===
+                  'rowSeparator' &&
+                isRow) ||
+                (tutorialStep ===
+                  'stitchSeparator' &&
+                !isRow)) && (
                 <Animated.View
                   pointerEvents="none"
                   style={[
@@ -1515,6 +1530,11 @@ export default function CounterScreen() {
         </View>
 
         <TouchableOpacity
+          ref={
+            isRow
+              ? rowPlusRef
+              : stitchPlusRef
+          }
           style={[
             styles.plusButton,
 
@@ -1566,36 +1586,8 @@ export default function CounterScreen() {
           }
         >
           {isTutorial &&
-            tutorialStep ===
-              'row' &&
-            isRow &&
-            renderTutorialBubble(
-              isJapanese
-                ? '段を数える'
-                : 'Count a row',
-              isJapanese
-                ? '編み終わった段ごとに＋を押します。'
-                : 'Tap + each time you finish a row.',
-              'above'
-            )}
-
-          {isTutorial &&
-            tutorialStep ===
-              'stitch' &&
-            !isRow &&
-            renderTutorialBubble(
-              isJapanese
-                ? '目を数える'
-                : 'Count a stitch',
-              isJapanese
-                ? '必要なときは目数も＋で数えられます。'
-                : 'Use + to count stitches when needed.',
-              'above'
-            )}
-
-          {isTutorial &&
             ((tutorialStep ===
-                'row' &&
+                'row1' &&
               isRow) ||
               (tutorialStep ===
                 'stitch' &&
@@ -1651,6 +1643,7 @@ export default function CounterScreen() {
       ]}
     >
       <View
+        ref={rootRef}
         style={[
           styles.container,
           {
@@ -1659,6 +1652,201 @@ export default function CounterScreen() {
           },
         ]}
       >
+        {isTutorial &&
+          tutorialTarget &&
+          (tutorialStep === 'row1' ||
+            tutorialStep === 'stitch1' ||
+            tutorialStep === 'row2' ||
+            tutorialStep === 'stitch2' ||
+            tutorialStep === 'progress' ||
+            tutorialStep === 'stitchSeparator' ||
+            tutorialStep === 'undo' ||
+            tutorialStep === 'rowSeparator') && (() => {
+            const bubbleWidth = 236;
+            const targetCenter =
+              tutorialTarget.x +
+              tutorialTarget.width / 2;
+            const left = Math.max(
+              12,
+              Math.min(
+                width -
+                  bubbleWidth -
+                  12,
+                targetCenter -
+                  bubbleWidth / 2
+              )
+            );
+            const showAbove =
+              tutorialTarget.y > 190;
+            const top = showAbove
+              ? Math.max(
+                  8,
+                  tutorialTarget.y - 150
+                )
+              : tutorialTarget.y +
+                tutorialTarget.height +
+                16;
+            const pointerLeft = Math.max(
+              20,
+              Math.min(
+                bubbleWidth - 30,
+                targetCenter - left - 10
+              )
+            );
+
+            const isFirstRow =
+              tutorialStep === 'row1' ||
+              tutorialStep === 'stitch1';
+            const isSecondRow =
+              tutorialStep === 'row2' ||
+              tutorialStep === 'stitch2';
+
+            const title =
+              isFirstRow
+                ? isJapanese
+                  ? '1段目を数える'
+                  : 'Count the first row'
+                : isSecondRow
+                  ? isJapanese
+                    ? '2段目を数える'
+                    : 'Count the second row'
+                  : tutorialStep ===
+                      'progress'
+                    ? isJapanese
+                      ? '途中を記録'
+                      : 'Save Progress'
+                    : tutorialStep ===
+                        'stitchSeparator'
+                      ? isJapanese
+                        ? '目を区切る'
+                        : 'Separate stitches'
+                      : tutorialStep ===
+                          'undo'
+                        ? 'Undo'
+                        : isJapanese
+                          ? '段を区切る'
+                          : 'Separate rows';
+
+            const body =
+              tutorialStep === 'row1'
+                ? isJapanese
+                  ? 'まず段の＋を1回押します。'
+                  : 'Tap the row + once.'
+                : tutorialStep ===
+                    'stitch1'
+                  ? isJapanese
+                    ? `目の＋をあと${Math.max(0, 3 - project.stitch)}回押して、1段3目にします。`
+                    : `Tap the stitch + ${Math.max(0, 3 - project.stitch)} more time(s) to reach 1 row, 3 stitches.`
+                  : tutorialStep ===
+                      'row2'
+                    ? isJapanese
+                      ? '次の段へ進むため、段の＋を1回押します。'
+                      : 'Tap the row + once for the next row.'
+                    : tutorialStep ===
+                        'stitch2'
+                      ? isJapanese
+                        ? `目の＋をあと${Math.max(0, 3 - project.stitch)}回押して、2段3目にします。`
+                        : `Tap the stitch + ${Math.max(0, 3 - project.stitch)} more time(s) to reach 2 rows, 3 stitches.`
+                      : tutorialStep ===
+                          'progress'
+                        ? isJapanese
+                          ? '2段3目の現在位置を「途中」として履歴に残します。'
+                          : 'Save the current 2 rows, 3 stitches as a progress marker.'
+                        : tutorialStep ===
+                            'stitchSeparator'
+                          ? isJapanese
+                            ? '目側の│→を押します。2段はそのままで、3目が履歴に残り、目だけ0になります。'
+                            : 'Tap the stitch │→. Rows stay at 2, while 3 stitches are saved and stitches reset to 0.'
+                          : tutorialStep ===
+                              'undo'
+                            ? isJapanese
+                              ? 'Undoを押して、2段3目の状態に戻します。'
+                              : 'Tap Undo to return to 2 rows, 3 stitches.'
+                            : isJapanese
+                              ? '段側の│→を押します。2段3目を履歴に残し、段と目を両方0にします。'
+                              : 'Tap the row │→. It saves 2 rows, 3 stitches and resets both to 0.';
+
+            return (
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.floatingTutorialBubble,
+                  {
+                    left,
+                    top,
+                    width:
+                      bubbleWidth,
+                    backgroundColor:
+                      currentTheme.surface,
+                    borderColor:
+                      currentTheme.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.floatingTutorialStep,
+                    {
+                      color:
+                        currentTheme.subText,
+                    },
+                  ]}
+                >
+                  {tutorialStepNumber} / 11
+                </Text>
+
+                <Text
+                  style={[
+                    styles.floatingTutorialTitle,
+                    {
+                      color:
+                        currentTheme.text,
+                    },
+                  ]}
+                >
+                  {title}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.floatingTutorialText,
+                    {
+                      color:
+                        currentTheme.subText,
+                    },
+                  ]}
+                >
+                  {body}
+                </Text>
+
+                <View
+                  style={[
+                    styles.floatingTutorialPointer,
+                    {
+                      left:
+                        pointerLeft,
+                    },
+                    showAbove
+                      ? {
+                          bottom: -10,
+                          borderTopWidth:
+                            10,
+                          borderTopColor:
+                            currentTheme.surface,
+                        }
+                      : {
+                          top: -10,
+                          borderBottomWidth:
+                            10,
+                          borderBottomColor:
+                            currentTheme.surface,
+                        },
+                  ]}
+                />
+              </View>
+            );
+          })()}
+
         <View
           style={[
             styles.header,
@@ -2363,18 +2551,17 @@ const styles =
       borderRadius: 999,
     },
 
-    anchoredBubble: {
+    floatingTutorialBubble: {
       position: 'absolute',
-      zIndex: 140,
-      elevation: 20,
-      width: 230,
+      zIndex: 180,
+      elevation: 30,
       borderRadius: 18,
       borderWidth: 1,
       paddingHorizontal: 14,
       paddingTop: 11,
       paddingBottom: 12,
       shadowColor: '#000',
-      shadowOpacity: 0.13,
+      shadowOpacity: 0.14,
       shadowRadius: 10,
       shadowOffset: {
         width: 0,
@@ -2382,63 +2569,32 @@ const styles =
       },
     },
 
-    anchoredBubbleAbove: {
-      bottom: '100%',
-      marginBottom: 14,
-      alignSelf: 'center',
-    },
-
-    anchoredBubbleBelow: {
-      top: '100%',
-      marginTop: 14,
-      alignSelf: 'center',
-    },
-
-    anchoredBubbleAboveRight: {
-      right: -8,
-      bottom: '100%',
-      marginBottom: 14,
-    },
-
-    anchoredBubbleStep: {
+    floatingTutorialStep: {
       fontSize: 11,
       fontWeight: '800',
       marginBottom: 4,
     },
 
-    anchoredBubbleTitle: {
+    floatingTutorialTitle: {
       fontSize: 16,
       fontWeight: '800',
       marginBottom: 3,
     },
 
-    anchoredBubbleText: {
+    floatingTutorialText: {
       fontSize: 13,
       lineHeight: 18,
       fontWeight: '500',
     },
 
-    anchoredBubblePointer: {
+    floatingTutorialPointer: {
       position: 'absolute',
-      right: 24,
       width: 0,
       height: 0,
       borderLeftWidth: 10,
       borderRightWidth: 10,
-      borderLeftColor:
-        'transparent',
-      borderRightColor:
-        'transparent',
-    },
-
-    anchoredBubblePointerDown: {
-      bottom: -10,
-      borderTopWidth: 10,
-    },
-
-    anchoredBubblePointerUp: {
-      top: -10,
-      borderBottomWidth: 10,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
     },
 
     loadingSafeArea: {
