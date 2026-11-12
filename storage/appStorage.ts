@@ -41,12 +41,23 @@ export type IntroStage =
   | 'tutorial'
   | 'done';
 
+export type TutorialStep =
+  | 'create'
+  | 'createForm'
+  | 'openProject'
+  | 'row'
+  | 'stitch'
+  | 'progress'
+  | 'undo';
+
 export type AppData = {
   projects: Project[];
   language: Language;
   theme: ThemeName;
   soundEnabled: boolean;
   introStage: IntroStage;
+  tutorialStep: TutorialStep;
+  tutorialProjectId: string | null;
 };
 
 const defaultData: AppData = {
@@ -55,6 +66,8 @@ const defaultData: AppData = {
   theme: 'beige',
   soundEnabled: true,
   introStage: 'onboarding',
+  tutorialStep: 'create',
+  tutorialProjectId: null,
 };
 
 export async function loadAppData(): Promise<AppData> {
