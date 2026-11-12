@@ -301,34 +301,6 @@ export default function CounterScreen() {
       await saveAppData(nextData);
     };
 
-  const finishTutorial =
-    async () => {
-      const data =
-        await loadAppData();
-
-      const nextData = {
-        ...data,
-        projects:
-          data.tutorialProjectId
-            ? data.projects.filter(
-                (item) =>
-                  item.id !==
-                  data.tutorialProjectId
-              )
-            : data.projects,
-        introStage:
-          'done' as const,
-        tutorialStep:
-          'create' as const,
-        tutorialProjectId:
-          null,
-      };
-
-      await saveAppData(nextData);
-      setTutorialStep(null);
-      router.replace('/');
-    };
-
   const playTapSound =
     () => {
       if (!soundEnabled) {
@@ -669,8 +641,10 @@ export default function CounterScreen() {
       tutorialStep === 'undo'
     ) {
       await advanceTutorial(
-        'complete'
+        'editProject'
       );
+
+      router.replace('/');
     }
   };
 
@@ -1603,101 +1577,6 @@ export default function CounterScreen() {
           </View>
         )}
 
-        {isTutorial &&
-          tutorialStep ===
-            'complete' && (
-            <View
-              style={
-                styles.tutorialCompleteOverlay
-              }
-            >
-              <View
-                style={[
-                  styles.tutorialCompleteCard,
-                  {
-                    backgroundColor:
-                      currentTheme.surface,
-                    borderColor:
-                      currentTheme.border,
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.tutorialCompleteIcon,
-                    {
-                      backgroundColor:
-                        currentTheme.soft,
-                    },
-                  ]}
-                >
-                  <Feather
-                    name="check"
-                    size={34}
-                    color={
-                      currentTheme.text
-                    }
-                  />
-                </View>
-
-                <Text
-                  style={[
-                    styles.tutorialCompleteTitle,
-                    {
-                      color:
-                        currentTheme.text,
-                    },
-                  ]}
-                >
-                  {isJapanese
-                    ? '基本操作は以上です'
-                    : 'You’re ready to go'}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.tutorialCompleteText,
-                    {
-                      color:
-                        currentTheme.subText,
-                    },
-                  ]}
-                >
-                  {isJapanese
-                    ? '練習作品は自動で削除されます。実際の作品を作って使い始めましょう。'
-                    : 'The practice project will be removed. Create your own project and start knitting.'}
-                </Text>
-
-                <TouchableOpacity
-                  style={[
-                    styles.tutorialCompleteButton,
-                    {
-                      backgroundColor:
-                        currentTheme.accent,
-                    },
-                  ]}
-                  onPress={
-                    finishTutorial
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.tutorialCompleteButtonText,
-                      {
-                        color:
-                          currentTheme.text,
-                      },
-                    ]}
-                  >
-                    {isJapanese
-                      ? '使い始める'
-                      : 'Start using Knit Mark'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
         <View
           style={[
             styles.header,
@@ -2450,72 +2329,6 @@ const styles =
       fontSize: 14,
       lineHeight: 20,
       fontWeight: '500',
-    },
-
-    tutorialCompleteOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      zIndex: 200,
-      elevation: 30,
-      backgroundColor:
-        'rgba(36, 28, 22, 0.38)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 24,
-    },
-
-    tutorialCompleteCard: {
-      width: '100%',
-      maxWidth: 420,
-      borderRadius: 28,
-      borderWidth: 1,
-      paddingHorizontal: 24,
-      paddingTop: 28,
-      paddingBottom: 22,
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOpacity: 0.18,
-      shadowRadius: 18,
-      shadowOffset: {
-        width: 0,
-        height: 8,
-      },
-      elevation: 12,
-    },
-
-    tutorialCompleteIcon: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 18,
-    },
-
-    tutorialCompleteTitle: {
-      fontSize: 23,
-      fontWeight: '800',
-      textAlign: 'center',
-      marginBottom: 10,
-    },
-
-    tutorialCompleteText: {
-      fontSize: 15,
-      lineHeight: 22,
-      textAlign: 'center',
-      marginBottom: 22,
-    },
-
-    tutorialCompleteButton: {
-      width: '100%',
-      minHeight: 54,
-      borderRadius: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-
-    tutorialCompleteButtonText: {
-      fontSize: 16,
-      fontWeight: '800',
     },
 
     loadingSafeArea: {
