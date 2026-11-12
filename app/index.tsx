@@ -242,7 +242,7 @@ export default function ProjectListScreen() {
     };
 
   const closeCreateModal =
-    () => {
+    async () => {
       Keyboard.dismiss();
 
       setCreateModalVisible(
@@ -251,6 +251,17 @@ export default function ProjectListScreen() {
 
       setProjectName('');
       setMemo('');
+
+      if (
+        isTutorial &&
+        tutorialStep ===
+          'createForm'
+      ) {
+        await updateTutorial({
+          tutorialStep:
+            'create',
+        });
+      }
     };
 
   const createProject =
@@ -264,7 +275,8 @@ export default function ProjectListScreen() {
 
       if (
         appData.projects
-          .length >= 5
+          .length >= 5 &&
+        !isTutorial
       ) {
         return;
       }
@@ -317,6 +329,16 @@ export default function ProjectListScreen() {
     async (
       project: Project
     ) => {
+      if (
+        isTutorial &&
+        (tutorialStep !==
+          'openProject' ||
+          appData.tutorialProjectId !==
+            project.id)
+      ) {
+        return;
+      }
+
       if (
         isTutorial &&
         tutorialStep ===
@@ -1146,8 +1168,9 @@ export default function ProjectListScreen() {
           )}
         </ScrollView>
 
-        {appData.projects.length <
-          5 && (
+        {(appData.projects.length <
+          5 ||
+          isTutorial) && (
           <TouchableOpacity
             style={[
               styles.addButton,
