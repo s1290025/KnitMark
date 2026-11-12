@@ -255,7 +255,10 @@ export default function CounterScreen() {
         : tutorialStep ===
             'progress'
           ? 6
-          : 7;
+          : tutorialStep ===
+              'undo'
+            ? 7
+            : 8;
 
   const pulseStyle = {
     opacity:
@@ -467,7 +470,11 @@ export default function CounterScreen() {
 
   const startNewRow =
     async () => {
-      if (isTutorial) {
+      if (
+        isTutorial &&
+        tutorialStep !==
+          'separator'
+      ) {
         return;
       }
 
@@ -641,10 +648,8 @@ export default function CounterScreen() {
       tutorialStep === 'undo'
     ) {
       await advanceTutorial(
-        'editProject'
+        'separator'
       );
-
-      router.replace('/');
     }
   };
 
@@ -762,30 +767,6 @@ export default function CounterScreen() {
                 : 'Paused'}
             </Text>
 
-            <View
-              style={[
-                styles.tutorialPointer,
-                tutorialStep ===
-                    'progress' ||
-                  tutorialStep ===
-                    'undo'
-                  ? styles.tutorialPointerUp
-                  : styles.tutorialPointerDown,
-
-                tutorialStep ===
-                    'progress' ||
-                  tutorialStep ===
-                    'undo'
-                  ? {
-                      borderBottomColor:
-                        currentTheme.surface,
-                    }
-                  : {
-                      borderTopColor:
-                        currentTheme.surface,
-                    },
-              ]}
-            />
           </View>
         )}
       </View>
@@ -997,6 +978,89 @@ export default function CounterScreen() {
     </View>
   );
 
+  const renderTutorialBubble = (
+    title: string,
+    body: string,
+    position:
+      | 'above'
+      | 'below'
+      | 'aboveRight'
+  ) => (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.anchoredBubble,
+        position === 'above' &&
+          styles.anchoredBubbleAbove,
+        position === 'below' &&
+          styles.anchoredBubbleBelow,
+        position ===
+          'aboveRight' &&
+          styles.anchoredBubbleAboveRight,
+        {
+          backgroundColor:
+            currentTheme.surface,
+          borderColor:
+            currentTheme.border,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.anchoredBubbleStep,
+          {
+            color:
+              currentTheme.subText,
+          },
+        ]}
+      >
+        {tutorialStepNumber} / 11
+      </Text>
+
+      <Text
+        style={[
+          styles.anchoredBubbleTitle,
+          {
+            color:
+              currentTheme.text,
+          },
+        ]}
+      >
+        {title}
+      </Text>
+
+      <Text
+        style={[
+          styles.anchoredBubbleText,
+          {
+            color:
+              currentTheme.subText,
+          },
+        ]}
+      >
+        {body}
+      </Text>
+
+      <View
+        style={[
+          styles.anchoredBubblePointer,
+          position === 'below'
+            ? styles.anchoredBubblePointerUp
+            : styles.anchoredBubblePointerDown,
+          position === 'below'
+            ? {
+                borderBottomColor:
+                  currentTheme.surface,
+              }
+            : {
+                borderTopColor:
+                  currentTheme.surface,
+              },
+        ]}
+      />
+    </View>
+  );
+
   const renderPortraitActions =
     () => (
       <View
@@ -1065,6 +1129,19 @@ export default function CounterScreen() {
         >
           {isTutorial &&
             tutorialStep ===
+              'progress' &&
+            renderTutorialBubble(
+              isJapanese
+                ? '途中を記録'
+                : 'Save Progress',
+              isJapanese
+                ? '今の段数・目数を「途中」として履歴に残します。'
+                : 'Save the current row and stitch count as a progress marker.',
+              'below'
+            )}
+
+          {isTutorial &&
+            tutorialStep ===
               'progress' && (
               <Animated.View
                 pointerEvents="none"
@@ -1116,6 +1193,19 @@ export default function CounterScreen() {
               .length === 0
           }
         >
+          {isTutorial &&
+            tutorialStep ===
+              'undo' &&
+            renderTutorialBubble(
+              isJapanese
+                ? 'Undo'
+                : 'Undo',
+              isJapanese
+                ? '直前の操作を1つ取り消します。'
+                : 'Undo the most recent action.',
+              'below'
+            )}
+
           {isTutorial &&
             tutorialStep ===
               'undo' && (
@@ -1259,7 +1349,10 @@ export default function CounterScreen() {
               tutorialStep ===
                 'progress' ||
               tutorialStep ===
-                'undo') &&
+                'undo' ||
+              (tutorialStep ===
+                'separator' &&
+                !isRow)) &&
             styles.tutorialDim,
         ]}
       >
@@ -1371,6 +1464,33 @@ export default function CounterScreen() {
                 : startNewStitch
             }
           >
+            {isTutorial &&
+              tutorialStep ===
+                'separator' &&
+              isRow &&
+              renderTutorialBubble(
+                isJapanese
+                  ? '│→ で区切る'
+                  : 'Use │→ to separate',
+                isJapanese
+                  ? '段側の│→は、今の段数・目数を履歴に残して両方を0にします。目側では目数だけを記録して0にします。'
+                  : 'On Rows, │→ saves the current row and stitch counts and resets both. On Stitches, it saves and resets only stitches.',
+                'aboveRight'
+              )}
+
+            {isTutorial &&
+              tutorialStep ===
+                'separator' &&
+              isRow && (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.tutorialPulseRing,
+                    pulseStyle,
+                  ]}
+                />
+              )}
+
             <Text
               style={[
                 styles.nextButtonText,
@@ -1446,6 +1566,34 @@ export default function CounterScreen() {
           }
         >
           {isTutorial &&
+            tutorialStep ===
+              'row' &&
+            isRow &&
+            renderTutorialBubble(
+              isJapanese
+                ? '段を数える'
+                : 'Count a row',
+              isJapanese
+                ? '編み終わった段ごとに＋を押します。'
+                : 'Tap + each time you finish a row.',
+              'above'
+            )}
+
+          {isTutorial &&
+            tutorialStep ===
+              'stitch' &&
+            !isRow &&
+            renderTutorialBubble(
+              isJapanese
+                ? '目を数える'
+                : 'Count a stitch',
+              isJapanese
+                ? '必要なときは目数も＋で数えられます。'
+                : 'Use + to count stitches when needed.',
+              'above'
+            )}
+
+          {isTutorial &&
             ((tutorialStep ===
                 'row' &&
               isRow) ||
@@ -1511,105 +1659,6 @@ export default function CounterScreen() {
           },
         ]}
       >
-        {isTutorial &&
-          tutorialStep !==
-            'complete' && (
-          <View
-            pointerEvents="none"
-            style={[
-              styles.tutorialMessage,
-
-              tutorialStep === 'row'
-                ? styles.tutorialMessageRow
-                : tutorialStep ===
-                    'stitch'
-                  ? styles.tutorialMessageStitch
-                  : styles.tutorialMessageAction,
-
-              {
-                backgroundColor:
-                  currentTheme.surface,
-                borderColor:
-                  currentTheme.border,
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.tutorialStepBadge,
-                {
-                  backgroundColor:
-                    currentTheme.soft,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.tutorialStepBadgeText,
-                  {
-                    color:
-                      currentTheme.text,
-                  },
-                ]}
-              >
-                {tutorialStepNumber} / 10
-              </Text>
-            </View>
-
-            <Text
-              style={[
-                styles.tutorialMessageTitle,
-                {
-                  color:
-                    currentTheme.text,
-                },
-              ]}
-            >
-              {tutorialStep === 'row'
-                ? isJapanese
-                  ? '段を数える'
-                  : 'Count a row'
-                : tutorialStep === 'stitch'
-                  ? isJapanese
-                    ? '目を数える'
-                    : 'Count a stitch'
-                  : tutorialStep === 'progress'
-                    ? isJapanese
-                      ? '途中を記録'
-                      : 'Save your progress'
-                    : isJapanese
-                      ? 'ひとつ前に戻す'
-                      : 'Undo one action'}
-            </Text>
-
-            <Text
-              style={[
-                styles.tutorialMessageText,
-                {
-                  color:
-                    currentTheme.subText,
-                },
-              ]}
-            >
-              {tutorialStep === 'row'
-                ? isJapanese
-                  ? '光っている＋を押すと、段数が1つ増えます。'
-                  : 'Tap the glowing + to add one row.'
-                : tutorialStep === 'stitch'
-                  ? isJapanese
-                    ? '次は目の＋を押して、1目数えてみましょう。'
-                    : 'Tap the stitch + to count one stitch.'
-                  : tutorialStep === 'progress'
-                    ? isJapanese
-                      ? '今の位置を「途中」として履歴に残してみましょう。'
-                      : 'Save your current position as a progress marker.'
-                    : isJapanese
-                      ? 'Undoを押すと、直前の操作を取り消せます。'
-                      : 'Undo removes your most recent action.'}
-            </Text>
-          </View>
-        )}
-
         <View
           style={[
             styles.header,
@@ -2314,91 +2363,82 @@ const styles =
       borderRadius: 999,
     },
 
-    tutorialMessage: {
+    anchoredBubble: {
       position: 'absolute',
-      zIndex: 120,
-      width: 246,
-      borderRadius: 20,
+      zIndex: 140,
+      elevation: 20,
+      width: 230,
+      borderRadius: 18,
       borderWidth: 1,
-      paddingHorizontal: 16,
-      paddingTop: 13,
-      paddingBottom: 14,
+      paddingHorizontal: 14,
+      paddingTop: 11,
+      paddingBottom: 12,
       shadowColor: '#000',
-      shadowOpacity: 0.12,
-      shadowRadius: 12,
+      shadowOpacity: 0.13,
+      shadowRadius: 10,
       shadowOffset: {
         width: 0,
-        height: 5,
+        height: 4,
       },
-      elevation: 7,
     },
 
-    tutorialMessageRow: {
-      left: 18,
-      top: '45%',
+    anchoredBubbleAbove: {
+      bottom: '100%',
+      marginBottom: 14,
+      alignSelf: 'center',
     },
 
-    tutorialMessageStitch: {
-      right: 18,
-      bottom: 150,
+    anchoredBubbleBelow: {
+      top: '100%',
+      marginTop: 14,
+      alignSelf: 'center',
     },
 
-    tutorialMessageAction: {
-      right: 18,
-      top: 112,
+    anchoredBubbleAboveRight: {
+      right: -8,
+      bottom: '100%',
+      marginBottom: 14,
     },
 
-    tutorialPointer: {
+    anchoredBubbleStep: {
+      fontSize: 11,
+      fontWeight: '800',
+      marginBottom: 4,
+    },
+
+    anchoredBubbleTitle: {
+      fontSize: 16,
+      fontWeight: '800',
+      marginBottom: 3,
+    },
+
+    anchoredBubbleText: {
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: '500',
+    },
+
+    anchoredBubblePointer: {
       position: 'absolute',
+      right: 24,
       width: 0,
       height: 0,
-      borderLeftWidth: 11,
-      borderRightWidth: 11,
+      borderLeftWidth: 10,
+      borderRightWidth: 10,
       borderLeftColor:
         'transparent',
       borderRightColor:
         'transparent',
     },
 
-    tutorialPointerDown: {
-      right: 32,
-      bottom: -11,
-      borderTopWidth: 11,
+    anchoredBubblePointerDown: {
+      bottom: -10,
+      borderTopWidth: 10,
     },
 
-    tutorialPointerUp: {
-      right: 32,
-      top: -11,
-      borderBottomWidth: 11,
-    },
-
-    tutorialStepBadge: {
-      alignSelf: 'flex-start',
-      minWidth: 48,
-      minHeight: 26,
-      paddingHorizontal: 9,
-      borderRadius: 13,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 8,
-    },
-
-    tutorialStepBadgeText: {
-      fontSize: 12,
-      fontWeight: '800',
-      letterSpacing: 0.3,
-    },
-
-    tutorialMessageTitle: {
-      fontSize: 18,
-      fontWeight: '800',
-      marginBottom: 4,
-    },
-
-    tutorialMessageText: {
-      fontSize: 14,
-      lineHeight: 20,
-      fontWeight: '500',
+    anchoredBubblePointerUp: {
+      top: -10,
+      borderBottomWidth: 10,
     },
 
     loadingSafeArea: {
