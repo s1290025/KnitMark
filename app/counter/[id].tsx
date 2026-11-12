@@ -11,7 +11,6 @@ import {
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -736,12 +735,9 @@ export default function CounterScreen() {
       }, 100);
     };
 
-  const displayHistory =
-    useMemo(() => {
-      return [
-        ...project.history,
-      ].reverse();
-    }, [project.history]);
+  const displayHistory = [
+    ...project.history,
+  ].reverse();
 
   const renderHistoryItem = (
     item: HistoryItem,
