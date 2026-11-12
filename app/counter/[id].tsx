@@ -1552,7 +1552,7 @@ export default function CounterScreen() {
                   },
                 ]}
               >
-                {tutorialStepNumber} / 7
+                {tutorialStepNumber} / 10
               </Text>
             </View>
 
