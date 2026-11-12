@@ -244,7 +244,16 @@ export default function ProjectListScreen() {
       : tutorialStep ===
           'createForm'
         ? 2
-        : 3;
+        : tutorialStep ===
+            'openProject'
+          ? 3
+          : tutorialStep ===
+              'editProject'
+            ? 8
+            : tutorialStep ===
+                'deleteProject'
+              ? 9
+              : 10;
 
   const pulseStyle = {
     opacity:
@@ -275,6 +284,22 @@ export default function ProjectListScreen() {
 
       setAppData(nextData);
       await saveAppData(nextData);
+    };
+
+  const finishTutorial =
+    async () => {
+      const nextData: AppData = {
+        ...appData,
+        introStage: 'done',
+        tutorialStep: 'create',
+        tutorialProjectId: null,
+      };
+
+      await saveAppData(
+        nextData
+      );
+
+      setAppData(nextData);
     };
 
   const openCreateModal =
@@ -431,28 +456,58 @@ export default function ProjectListScreen() {
       );
     };
 
-  const openEditModal = (
-    project: Project
-  ) => {
-    setEditingProject(
-      project
-    );
+  const openEditModal =
+    async (
+      project: Project
+    ) => {
+      if (
+        isTutorial &&
+        (tutorialStep !==
+          'editProject' ||
+          appData.tutorialProjectId !==
+            project.id)
+      ) {
+        return;
+      }
 
-    setEditName(
-      project.name
-    );
+      setEditingProject(
+        project
+      );
 
-    setEditMemo(
-      project.memo
-    );
+      setEditName(
+        project.name
+      );
 
-    setEditModalVisible(
-      true
-    );
-  };
+      setEditMemo(
+        project.memo
+      );
+
+      setEditModalVisible(
+        true
+      );
+
+      if (
+        isTutorial &&
+        tutorialStep ===
+          'editProject'
+      ) {
+        await updateTutorial({
+          tutorialStep:
+            'deleteProject',
+        });
+      }
+    };
 
   const closeEditModal =
     () => {
+      if (
+        isTutorial &&
+        tutorialStep ===
+          'deleteProject'
+      ) {
+        return;
+      }
+
       Keyboard.dismiss();
 
       setEditModalVisible(
@@ -561,10 +616,25 @@ export default function ProjectListScreen() {
                       editingProject.id
                   );
 
+                const tutorialDeleting =
+                  isTutorial &&
+                  tutorialStep ===
+                    'deleteProject' &&
+                  appData.tutorialProjectId ===
+                    editingProject.id;
+
                 const nextData:
                   AppData = {
                   ...appData,
                   projects,
+                  ...(tutorialDeleting
+                    ? {
+                        tutorialStep:
+                          'complete' as const,
+                        tutorialProjectId:
+                          null,
+                      }
+                    : {}),
                 };
 
                 await saveAppData(
@@ -575,7 +645,15 @@ export default function ProjectListScreen() {
                   nextData
                 );
 
-                closeEditModal();
+                Keyboard.dismiss();
+                setEditModalVisible(
+                  false
+                );
+                setEditingProject(
+                  null
+                );
+                setEditName('');
+                setEditMemo('');
               },
           },
         ]
@@ -953,7 +1031,75 @@ export default function ProjectListScreen() {
                     </View>
 
                     {!isCreate && (
-                      <TouchableOpacity
+                      <View>
+                        {isTutorial &&
+                          tutorialStep ===
+                            'deleteProject' && (
+                            <View
+                              pointerEvents="none"
+                              style={[
+                                styles.tutorialInlineBubble,
+                                {
+                                  backgroundColor:
+                                    currentTheme.surface,
+                                  borderColor:
+                                    currentTheme.border,
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.tutorialStepBadgeText,
+                                  {
+                                    color:
+                                      currentTheme.subText,
+                                  },
+                                ]}
+                              >
+                                9 / 10
+                              </Text>
+
+                              <Text
+                                style={[
+                                  styles.tutorialInlineTitle,
+                                  {
+                                    color:
+                                      currentTheme.text,
+                                  },
+                                ]}
+                              >
+                                {isJapanese
+                                  ? '作品を削除'
+                                  : 'Delete the project'}
+                              </Text>
+
+                              <Text
+                                style={[
+                                  styles.tutorialInlineText,
+                                  {
+                                    color:
+                                      currentTheme.subText,
+                                  },
+                                ]}
+                              >
+                                {isJapanese
+                                  ? '最後に「この作品を削除」を押してください。'
+                                  : 'Finally, tap Delete Project.'}
+                              </Text>
+
+                              <View
+                                style={[
+                                  styles.tutorialInlinePointer,
+                                  {
+                                    borderTopColor:
+                                      currentTheme.surface,
+                                  },
+                                ]}
+                              />
+                            </View>
+                          )}
+
+                        <TouchableOpacity
                         style={[
                           styles.deleteButton,
 
@@ -969,6 +1115,19 @@ export default function ProjectListScreen() {
                           deleteProject
                         }
                       >
+                        {isTutorial &&
+                          tutorialStep ===
+                            'deleteProject' && (
+                            <Animated.View
+                              pointerEvents="none"
+                              style={[
+                                styles.tutorialPulseRing,
+                                styles.tutorialPulseButton,
+                                pulseStyle,
+                              ]}
+                            />
+                          )}
+
                         <Text
                           style={{
                             color:
@@ -983,6 +1142,7 @@ export default function ProjectListScreen() {
                             : 'Delete Project'}
                         </Text>
                       </TouchableOpacity>
+                      </View>
                     )}
                   </ScrollView>
                 </View>
@@ -1247,6 +1407,13 @@ export default function ProjectListScreen() {
 
                     isSmallScreen &&
                       styles.editButtonSmall,
+
+                    isTutorial &&
+                      tutorialStep !==
+                        'editProject' &&
+                      appData.tutorialProjectId ===
+                        project.id &&
+                      styles.tutorialDim,
                   ]}
                   onPress={() =>
                     openEditModal(
@@ -1254,6 +1421,20 @@ export default function ProjectListScreen() {
                     )
                   }
                 >
+                  {isTutorial &&
+                    tutorialStep ===
+                      'editProject' &&
+                    appData.tutorialProjectId ===
+                      project.id && (
+                      <Animated.View
+                        pointerEvents="none"
+                        style={[
+                          styles.tutorialPulseRing,
+                          pulseStyle,
+                        ]}
+                      />
+                    )}
+
                   <FontAwesome
                     name="pencil-square-o"
                     size={
@@ -1331,11 +1512,21 @@ export default function ProjectListScreen() {
         )}
 
         {isTutorial &&
-          !createModalVisible && (
+          !createModalVisible &&
+          !editModalVisible &&
+          tutorialStep !==
+            'complete' && (
             <View
               pointerEvents="none"
               style={[
                 styles.tutorialMessage,
+                tutorialStep ===
+                  'create'
+                  ? styles.tutorialMessageCreate
+                  : tutorialStep ===
+                      'openProject'
+                    ? styles.tutorialMessageProject
+                    : styles.tutorialMessageEdit,
                 {
                   backgroundColor:
                     currentTheme.surface,
@@ -1380,9 +1571,14 @@ export default function ProjectListScreen() {
                   ? isJapanese
                     ? '作品を作ってみましょう'
                     : 'Create a project'
-                  : isJapanese
-                    ? '練習作品を開きます'
-                    : 'Open the practice project'}
+                  : tutorialStep ===
+                      'openProject'
+                    ? isJapanese
+                      ? '作った作品を開きます'
+                      : 'Open your project'
+                    : isJapanese
+                      ? '作品を編集します'
+                      : 'Edit the project'}
               </Text>
 
               <Text
@@ -1397,22 +1593,126 @@ export default function ProjectListScreen() {
                 {tutorialStep ===
                 'create'
                   ? isJapanese
-                    ? '光っている＋ボタンをタップしてください。'
-                    : 'Tap the highlighted + button.'
-                  : isJapanese
-                    ? '光っている「練習作品」をタップしてください。'
-                    : 'Tap the highlighted Practice Project.'}
+                    ? '吹き出しの先にある＋をタップしてください。'
+                    : 'Tap the + indicated by the bubble.'
+                  : tutorialStep ===
+                      'openProject'
+                    ? isJapanese
+                      ? '作った作品をタップして開いてください。'
+                      : 'Tap the project you just created.'
+                    : isJapanese
+                      ? '右側の編集ボタンをタップしてください。'
+                      : 'Tap the edit button on the right.'}
               </Text>
 
               <View
                 style={[
                   styles.tutorialPointer,
+                  tutorialStep ===
+                    'create'
+                    ? styles.tutorialPointerRight
+                    : styles.tutorialPointerLeft,
                   {
                     borderTopColor:
                       currentTheme.surface,
                   },
                 ]}
               />
+            </View>
+          )}
+
+        {isTutorial &&
+          tutorialStep ===
+            'complete' && (
+            <View
+              style={
+                styles.tutorialCompleteOverlay
+              }
+            >
+              <View
+                style={[
+                  styles.tutorialCompleteCard,
+                  {
+                    backgroundColor:
+                      currentTheme.surface,
+                    borderColor:
+                      currentTheme.border,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.tutorialCompleteIcon,
+                    {
+                      backgroundColor:
+                        currentTheme.soft,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="checkmark"
+                    size={34}
+                    color={
+                      currentTheme.text
+                    }
+                  />
+                </View>
+
+                <Text
+                  style={[
+                    styles.tutorialCompleteTitle,
+                    {
+                      color:
+                        currentTheme.text,
+                    },
+                  ]}
+                >
+                  {isJapanese
+                    ? 'さあ、始めましょう'
+                    : 'Ready to start'}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.tutorialCompleteText,
+                    {
+                      color:
+                        currentTheme.subText,
+                    },
+                  ]}
+                >
+                  {isJapanese
+                    ? '基本操作は以上です。自分の作品を作って、Knit Markを使い始めましょう。'
+                    : 'That’s the basics. Create your own project and start using Knit Mark.'}
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.tutorialCompleteButton,
+                    {
+                      backgroundColor:
+                        currentTheme.accent,
+                    },
+                  ]}
+                  onPress={
+                    finishTutorial
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.tutorialCompleteButtonText,
+                      {
+                        color:
+                          currentTheme.text,
+                      },
+                    ]}
+                  >
+                    {isJapanese
+                      ? '始める'
+                      : 'Start'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -1490,6 +1790,40 @@ const styles =
     },
 
     tutorialMessage: {
+      position: 'absolute',
+      zIndex: 80,
+      width: 250,
+      borderRadius: 20,
+      borderWidth: 1,
+      paddingHorizontal: 16,
+      paddingTop: 13,
+      paddingBottom: 14,
+      shadowColor: '#000',
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+      elevation: 7,
+    },
+
+    tutorialMessageCreate: {
+      right: 18,
+      bottom: 112,
+    },
+
+    tutorialMessageProject: {
+      left: 22,
+      top: 96,
+    },
+
+    tutorialMessageEdit: {
+      right: 22,
+      top: 96,
+    },
+
+    tutorialMessageLegacy: {
       position: 'absolute',
       left: 20,
       right: 20,
@@ -1570,6 +1904,115 @@ const styles =
       fontSize: 14,
       lineHeight: 20,
       fontWeight: '500',
+    },
+
+    tutorialPointerRight: {
+      right: 26,
+    },
+
+    tutorialPointerLeft: {
+      left: 34,
+    },
+
+    tutorialInlineBubble: {
+      position: 'relative',
+      borderWidth: 1,
+      borderRadius: 18,
+      padding: 14,
+      marginTop: 14,
+      marginBottom: 18,
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      elevation: 3,
+    },
+
+    tutorialInlineTitle: {
+      fontSize: 16,
+      fontWeight: '800',
+      marginTop: 4,
+      marginBottom: 3,
+    },
+
+    tutorialInlineText: {
+      fontSize: 13,
+      lineHeight: 19,
+    },
+
+    tutorialInlinePointer: {
+      position: 'absolute',
+      left: '50%',
+      bottom: -10,
+      marginLeft: -10,
+      width: 0,
+      height: 0,
+      borderLeftWidth: 10,
+      borderRightWidth: 10,
+      borderTopWidth: 10,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
+    },
+
+    tutorialCompleteOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 200,
+      elevation: 30,
+      backgroundColor:
+        'rgba(36, 28, 22, 0.38)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+    },
+
+    tutorialCompleteCard: {
+      width: '100%',
+      maxWidth: 420,
+      borderRadius: 28,
+      borderWidth: 1,
+      paddingHorizontal: 24,
+      paddingTop: 28,
+      paddingBottom: 22,
+      alignItems: 'center',
+    },
+
+    tutorialCompleteIcon: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 18,
+    },
+
+    tutorialCompleteTitle: {
+      fontSize: 23,
+      fontWeight: '800',
+      textAlign: 'center',
+      marginBottom: 10,
+    },
+
+    tutorialCompleteText: {
+      fontSize: 15,
+      lineHeight: 22,
+      textAlign: 'center',
+      marginBottom: 22,
+    },
+
+    tutorialCompleteButton: {
+      width: '100%',
+      minHeight: 54,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    tutorialCompleteButtonText: {
+      fontSize: 16,
+      fontWeight: '800',
     },
 
     loadingSafeArea: {
