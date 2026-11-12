@@ -1553,7 +1553,7 @@ export default function ProjectListScreen() {
                     },
                   ]}
                 >
-                  {tutorialStepNumber} / 7
+                  {tutorialStepNumber} / 10
                 </Text>
               </View>
 
@@ -1609,9 +1609,9 @@ export default function ProjectListScreen() {
                 style={[
                   styles.tutorialPointer,
                   tutorialStep ===
-                    'create'
-                    ? styles.tutorialPointerRight
-                    : styles.tutorialPointerLeft,
+                    'openProject'
+                    ? styles.tutorialPointerLeft
+                    : styles.tutorialPointerRight,
                   {
                     borderTopColor:
                       currentTheme.surface,
@@ -1821,27 +1821,6 @@ const styles =
     tutorialMessageEdit: {
       right: 22,
       top: 96,
-    },
-
-    tutorialMessageLegacy: {
-      position: 'absolute',
-      left: 20,
-      right: 20,
-      bottom: 112,
-      zIndex: 80,
-      borderRadius: 22,
-      borderWidth: 1,
-      paddingHorizontal: 18,
-      paddingTop: 15,
-      paddingBottom: 17,
-      shadowColor: '#000',
-      shadowOpacity: 0.12,
-      shadowRadius: 12,
-      shadowOffset: {
-        width: 0,
-        height: 5,
-      },
-      elevation: 7,
     },
 
     tutorialStepBadge: {
