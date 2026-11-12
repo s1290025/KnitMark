@@ -10,6 +10,7 @@ import {
 
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -17,6 +18,7 @@ import {
 
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -138,6 +140,41 @@ export default function CounterScreen() {
     setMemoDraft,
   ] = useState('');
 
+  const tutorialPulse =
+    useRef(
+      new Animated.Value(0)
+    ).current;
+
+  useEffect(() => {
+    const loop =
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(
+            tutorialPulse,
+            {
+              toValue: 1,
+              duration: 900,
+              useNativeDriver: true,
+            }
+          ),
+          Animated.timing(
+            tutorialPulse,
+            {
+              toValue: 0,
+              duration: 900,
+              useNativeDriver: true,
+            }
+          ),
+        ])
+      );
+
+    loop.start();
+
+    return () => {
+      loop.stop();
+    };
+  }, [tutorialPulse]);
+
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -209,6 +246,35 @@ export default function CounterScreen() {
 
   const isTutorial =
     tutorialStep !== null;
+
+  const tutorialStepNumber =
+    tutorialStep === 'row'
+      ? 4
+      : tutorialStep ===
+          'stitch'
+        ? 5
+        : tutorialStep ===
+            'progress'
+          ? 6
+          : 7;
+
+  const pulseStyle = {
+    opacity:
+      tutorialPulse.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.55, 0.1],
+      }),
+
+    transform: [
+      {
+        scale:
+          tutorialPulse.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 1.16],
+          }),
+      },
+    ],
+  };
 
   const advanceTutorial =
     async (
@@ -1005,6 +1071,18 @@ export default function CounterScreen() {
           activeOpacity={0.8}
           onPress={addMark}
         >
+          {isTutorial &&
+            tutorialStep ===
+              'progress' && (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.tutorialPulseRing,
+                  pulseStyle,
+                ]}
+              />
+            )}
+
           <Text
             style={[
               styles.markButtonText,
@@ -1051,6 +1129,18 @@ export default function CounterScreen() {
               .length === 0
           }
         >
+          {isTutorial &&
+            tutorialStep ===
+              'undo' && (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.tutorialPulseRing,
+                  pulseStyle,
+                ]}
+              />
+            )}
+
           <EvilIcons
             name="undo"
             size={34}
@@ -1385,6 +1475,22 @@ export default function CounterScreen() {
               : addStitch
           }
         >
+          {isTutorial &&
+            ((tutorialStep ===
+                'row' &&
+              isRow) ||
+              (tutorialStep ===
+                'stitch' &&
+              !isRow)) && (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.tutorialPulseRing,
+                  pulseStyle,
+                ]}
+              />
+            )}
+
           <Text
             style={[
               styles.plusText,
@@ -1442,34 +1548,84 @@ export default function CounterScreen() {
               styles.tutorialMessage,
               {
                 backgroundColor:
-                  currentTheme.text,
+                  currentTheme.surface,
+                borderColor:
+                  currentTheme.border,
               },
             ]}
           >
+            <View
+              style={[
+                styles.tutorialStepBadge,
+                {
+                  backgroundColor:
+                    currentTheme.soft,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tutorialStepBadgeText,
+                  {
+                    color:
+                      currentTheme.text,
+                  },
+                ]}
+              >
+                {tutorialStepNumber} / 7
+              </Text>
+            </View>
+
             <Text
               style={[
-                styles.tutorialMessageText,
+                styles.tutorialMessageTitle,
                 {
                   color:
-                    currentTheme.background,
+                    currentTheme.text,
                 },
               ]}
             >
               {tutorialStep === 'row'
                 ? isJapanese
-                  ? '段の＋を押して、1段進めてみましょう。'
-                  : 'Tap + for Rows to count one row.'
+                  ? '段を数える'
+                  : 'Count a row'
                 : tutorialStep === 'stitch'
                   ? isJapanese
-                    ? '次に、目の＋を押して1目数えてみましょう。'
-                    : 'Now tap + for Stitches.'
+                    ? '目を数える'
+                    : 'Count a stitch'
                   : tutorialStep === 'progress'
                     ? isJapanese
-                      ? '「途中を記録」を押して、今の位置を残します。'
-                      : 'Tap Save Progress to mark your place.'
+                      ? '途中を記録'
+                      : 'Save your progress'
                     : isJapanese
-                      ? '最後にUndoを押して、ひとつ前へ戻してみましょう。'
-                      : 'Finally, tap Undo to go back one step.'}
+                      ? 'ひとつ前に戻す'
+                      : 'Undo one action'}
+            </Text>
+
+            <Text
+              style={[
+                styles.tutorialMessageText,
+                {
+                  color:
+                    currentTheme.subText,
+                },
+              ]}
+            >
+              {tutorialStep === 'row'
+                ? isJapanese
+                  ? '光っている＋を押すと、段数が1つ増えます。'
+                  : 'Tap the glowing + to add one row.'
+                : tutorialStep === 'stitch'
+                  ? isJapanese
+                    ? '次は目の＋を押して、1目数えてみましょう。'
+                    : 'Tap the stitch + to count one stitch.'
+                  : tutorialStep === 'progress'
+                    ? isJapanese
+                      ? '今の位置を「途中」として履歴に残してみましょう。'
+                      : 'Save your current position as a progress marker.'
+                    : isJapanese
+                      ? 'Undoを押すと、直前の操作を取り消せます。'
+                      : 'Undo removes your most recent action.'}
             </Text>
           </View>
         )}
@@ -2164,42 +2320,82 @@ export default function CounterScreen() {
 const styles =
   StyleSheet.create({
     tutorialDim: {
-      opacity: 0.2,
+      opacity: 0.14,
     },
 
     tutorialTarget: {
       zIndex: 100,
       elevation: 20,
-      borderWidth: 4,
-      borderColor: '#7A4E32',
-      transform: [
-        { scale: 1.035 },
-      ],
+      borderWidth: 2.5,
+      borderColor: '#8B684F',
       shadowColor: '#000',
-      shadowOpacity: 0.32,
-      shadowRadius: 14,
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
       shadowOffset: {
         width: 0,
-        height: 6,
+        height: 5,
       },
+    },
+
+    tutorialPulseRing: {
+      position: 'absolute',
+      top: -7,
+      right: -7,
+      bottom: -7,
+      left: -7,
+      borderWidth: 3,
+      borderColor: '#8B684F',
+      borderRadius: 999,
     },
 
     tutorialMessage: {
       position: 'absolute',
-      top: 76,
+      top: 72,
       left: 20,
       right: 20,
       zIndex: 120,
-      borderRadius: 18,
+      borderRadius: 22,
+      borderWidth: 1,
       paddingHorizontal: 18,
-      paddingVertical: 14,
+      paddingTop: 15,
+      paddingBottom: 17,
+      shadowColor: '#000',
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+      elevation: 7,
+    },
+
+    tutorialStepBadge: {
+      alignSelf: 'flex-start',
+      minWidth: 48,
+      minHeight: 26,
+      paddingHorizontal: 9,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+
+    tutorialStepBadgeText: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 0.3,
+    },
+
+    tutorialMessageTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      marginBottom: 4,
     },
 
     tutorialMessageText: {
-      fontSize: 16,
-      lineHeight: 23,
-      fontWeight: '700',
-      textAlign: 'center',
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '500',
     },
 
     loadingSafeArea: {
