@@ -62,9 +62,11 @@ export default function OnboardingScreen() {
       ...data,
       language,
       introStage: 'tutorial',
+      tutorialStep: 'create',
+      tutorialProjectId: null,
     });
 
-    router.replace('/tutorial');
+    router.replace('/');
   };
 
   const next = async () => {
@@ -239,23 +241,25 @@ export default function OnboardingScreen() {
             </Text>
           </TouchableOpacity>
 
-          {page > 0 && (
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() =>
-                setPage((current) => current - 1)
-              }
+          <TouchableOpacity
+            style={[
+              styles.backButton,
+              page === 0 && styles.backButtonHidden,
+            ]}
+            onPress={() =>
+              setPage((current) => Math.max(0, current - 1))
+            }
+            disabled={page === 0}
+          >
+            <Text
+              style={{
+                color: theme.subText,
+                fontWeight: '600',
+              }}
             >
-              <Text
-                style={{
-                  color: theme.subText,
-                  fontWeight: '600',
-                }}
-              >
-                {isJapanese ? '戻る' : 'Back'}
-              </Text>
-            </TouchableOpacity>
-          )}
+              {isJapanese ? '戻る' : 'Back'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -363,5 +367,8 @@ const styles = StyleSheet.create({
     minHeight: 42,
     justifyContent: 'center',
     marginTop: 6,
+  },
+  backButtonHidden: {
+    opacity: 0,
   },
 });
