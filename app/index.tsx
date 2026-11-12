@@ -249,11 +249,11 @@ export default function ProjectListScreen() {
           ? 3
           : tutorialStep ===
               'editProject'
-            ? 8
+            ? 9
             : tutorialStep ===
                 'deleteProject'
-              ? 9
-              : 10;
+              ? 10
+              : 11;
 
   const pulseStyle = {
     opacity:
@@ -1056,7 +1056,7 @@ export default function ProjectListScreen() {
                                   },
                                 ]}
                               >
-                                9 / 10
+                                10 / 11
                               </Text>
 
                               <Text
@@ -1553,7 +1553,7 @@ export default function ProjectListScreen() {
                     },
                   ]}
                 >
-                  {tutorialStepNumber} / 10
+                  {tutorialStepNumber} / 11
                 </Text>
               </View>
 
