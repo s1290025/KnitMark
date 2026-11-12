@@ -126,6 +126,25 @@ export default function ProjectListScreen() {
     setEditMemo,
   ] = useState('');
 
+  const rootRef =
+    useRef<View | null>(null);
+  const addButtonRef =
+    useRef<any>(null);
+  const projectOpenRef =
+    useRef<any>(null);
+  const editButtonRef =
+    useRef<any>(null);
+
+  const [
+    tutorialTarget,
+    setTutorialTarget,
+  ] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
   const tutorialPulse =
     useRef(
       new Animated.Value(0)
@@ -182,6 +201,69 @@ export default function ProjectListScreen() {
       loop.stop();
     };
   }, [tutorialPulse]);
+
+  useEffect(() => {
+    if (
+      !appData ||
+      appData.introStage !==
+        'tutorial' ||
+      createModalVisible ||
+      editModalVisible ||
+      !rootRef.current
+    ) {
+      setTutorialTarget(null);
+      return;
+    }
+
+    const ref =
+      appData.tutorialStep ===
+        'create'
+        ? addButtonRef
+        : appData.tutorialStep ===
+            'openProject'
+          ? projectOpenRef
+          : appData.tutorialStep ===
+              'editProject'
+            ? editButtonRef
+            : null;
+
+    if (!ref?.current) {
+      setTutorialTarget(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      ref.current?.measureLayout(
+        rootRef.current,
+        (
+          x: number,
+          y: number,
+          measuredWidth: number,
+          measuredHeight: number
+        ) => {
+          setTutorialTarget({
+            x,
+            y,
+            width: measuredWidth,
+            height: measuredHeight,
+          });
+        },
+        () => {
+          setTutorialTarget(null);
+        }
+      );
+    }, 80);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [
+    appData?.tutorialStep,
+    createModalVisible,
+    editModalVisible,
+    width,
+    height,
+  ]);
 
   useEffect(() => {
     if (!appData) {
@@ -249,10 +331,10 @@ export default function ProjectListScreen() {
           ? 3
           : tutorialStep ===
               'editProject'
-            ? 9
+            ? 10
             : tutorialStep ===
                 'deleteProject'
-              ? 10
+              ? 11
               : 11;
 
   const pulseStyle = {
@@ -660,90 +742,6 @@ export default function ProjectListScreen() {
       );
     };
 
-  const renderListTutorialBubble = (
-    title: string,
-    body: string,
-    step: number,
-    position:
-      | 'above'
-      | 'below'
-      | 'aboveRight'
-  ) => (
-    <View
-      pointerEvents="none"
-      style={[
-        styles.listBubble,
-        position === 'above' &&
-          styles.listBubbleAbove,
-        position === 'below' &&
-          styles.listBubbleBelow,
-        position ===
-          'aboveRight' &&
-          styles.listBubbleAboveRight,
-        {
-          backgroundColor:
-            currentTheme.surface,
-          borderColor:
-            currentTheme.border,
-        },
-      ]}
-    >
-      <Text
-        style={[
-          styles.listBubbleStep,
-          {
-            color:
-              currentTheme.subText,
-          },
-        ]}
-      >
-        {step} / 11
-      </Text>
-
-      <Text
-        style={[
-          styles.listBubbleTitle,
-          {
-            color:
-              currentTheme.text,
-          },
-        ]}
-      >
-        {title}
-      </Text>
-
-      <Text
-        style={[
-          styles.listBubbleText,
-          {
-            color:
-              currentTheme.subText,
-          },
-        ]}
-      >
-        {body}
-      </Text>
-
-      <View
-        style={[
-          styles.listBubblePointer,
-          position === 'below'
-            ? styles.listBubblePointerUp
-            : styles.listBubblePointerDown,
-          position === 'below'
-            ? {
-                borderBottomColor:
-                  currentTheme.surface,
-              }
-            : {
-                borderTopColor:
-                  currentTheme.surface,
-              },
-        ]}
-      />
-    </View>
-  );
-
   const renderProjectForm =
     (
       mode:
@@ -1140,7 +1138,7 @@ export default function ProjectListScreen() {
                                   },
                                 ]}
                               >
-                                10 / 11
+                                11 / 11
                               </Text>
 
                               <Text
@@ -1249,6 +1247,7 @@ export default function ProjectListScreen() {
       ]}
     >
       <View
+        ref={rootRef}
         style={[
           styles.container,
 
@@ -1261,6 +1260,189 @@ export default function ProjectListScreen() {
           },
         ]}
       >
+        {isTutorial &&
+          tutorialTarget &&
+          (tutorialStep ===
+              'create' ||
+            tutorialStep ===
+              'openProject' ||
+            tutorialStep ===
+              'editProject') && (() => {
+            const bubbleWidth = 236;
+            const estimatedHeight =
+              126;
+            const targetCenter =
+              tutorialTarget.x +
+              tutorialTarget.width / 2;
+            const left = Math.max(
+              12,
+              Math.min(
+                width -
+                  bubbleWidth -
+                  12,
+                targetCenter -
+                  bubbleWidth / 2
+              )
+            );
+            const spaceAbove =
+              tutorialTarget.y - 12;
+            const spaceBelow =
+              height -
+              (tutorialTarget.y +
+                tutorialTarget.height) -
+              12;
+            const showAbove =
+              spaceAbove >=
+                estimatedHeight +
+                  14 ||
+              spaceAbove > spaceBelow;
+            const rawTop = showAbove
+              ? tutorialTarget.y -
+                estimatedHeight -
+                14
+              : tutorialTarget.y +
+                tutorialTarget.height +
+                14;
+            const top = Math.max(
+              8,
+              Math.min(
+                height -
+                  estimatedHeight -
+                  8,
+                rawTop
+              )
+            );
+            const pointerLeft =
+              Math.max(
+                20,
+                Math.min(
+                  bubbleWidth - 30,
+                  targetCenter -
+                    left -
+                    10
+                )
+              );
+
+            const step =
+              tutorialStep ===
+                'create'
+                ? 1
+                : tutorialStep ===
+                    'openProject'
+                  ? 3
+                  : 10;
+
+            const title =
+              tutorialStep ===
+                'create'
+                ? isJapanese
+                  ? '作品を作る'
+                  : 'Create a project'
+                : tutorialStep ===
+                    'openProject'
+                  ? isJapanese
+                    ? '作品を開く'
+                    : 'Open your project'
+                  : isJapanese
+                    ? '作品を編集'
+                    : 'Edit the project';
+
+            const body =
+              tutorialStep ===
+                'create'
+                ? isJapanese
+                  ? '＋を押して、新しい作品を作ります。'
+                  : 'Tap + to create a new project.'
+                : tutorialStep ===
+                    'openProject'
+                  ? isJapanese
+                    ? '作った作品をタップしてカウンターを開きます。'
+                    : 'Tap the project to open the counter.'
+                  : isJapanese
+                    ? '右側の編集ボタンを押します。ここから作品を削除できます。'
+                    : 'Tap the edit button. You can delete the project from here.';
+
+            return (
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.floatingListBubble,
+                  {
+                    left,
+                    top,
+                    width:
+                      bubbleWidth,
+                    backgroundColor:
+                      currentTheme.surface,
+                    borderColor:
+                      currentTheme.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.floatingListStep,
+                    {
+                      color:
+                        currentTheme.subText,
+                    },
+                  ]}
+                >
+                  {step} / 11
+                </Text>
+
+                <Text
+                  style={[
+                    styles.floatingListTitle,
+                    {
+                      color:
+                        currentTheme.text,
+                    },
+                  ]}
+                >
+                  {title}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.floatingListText,
+                    {
+                      color:
+                        currentTheme.subText,
+                    },
+                  ]}
+                >
+                  {body}
+                </Text>
+
+                <View
+                  style={[
+                    styles.floatingListPointer,
+                    {
+                      left:
+                        pointerLeft,
+                    },
+                    showAbove
+                      ? {
+                          bottom: -10,
+                          borderTopWidth:
+                            10,
+                          borderTopColor:
+                            currentTheme.surface,
+                        }
+                      : {
+                          top: -10,
+                          borderBottomWidth:
+                            10,
+                          borderBottomColor:
+                            currentTheme.surface,
+                        },
+                  ]}
+                />
+              </View>
+            );
+          })()}
+
         <View
           style={[
             styles.header,
@@ -1398,6 +1580,12 @@ export default function ProjectListScreen() {
                   )}
 
                 <TouchableOpacity
+                  ref={
+                    appData.tutorialProjectId ===
+                      project.id
+                      ? projectOpenRef
+                      : undefined
+                  }
                   style={[
                     styles.projectInfoButton,
 
@@ -1413,22 +1601,6 @@ export default function ProjectListScreen() {
                     )
                   }
                 >
-                  {isTutorial &&
-                    tutorialStep ===
-                      'openProject' &&
-                    appData.tutorialProjectId ===
-                      project.id &&
-                    renderListTutorialBubble(
-                      isJapanese
-                        ? '作った作品を開く'
-                        : 'Open your project',
-                      isJapanese
-                        ? 'この作品をタップしてカウンターを開きます。'
-                        : 'Tap this project to open the counter.',
-                      3,
-                      'below'
-                    )}
-
                   <View
                     style={
                       styles.projectInfo
@@ -1502,6 +1674,12 @@ export default function ProjectListScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  ref={
+                    appData.tutorialProjectId ===
+                      project.id
+                      ? editButtonRef
+                      : undefined
+                  }
                   style={[
                     styles.editButton,
 
@@ -1521,22 +1699,6 @@ export default function ProjectListScreen() {
                     )
                   }
                 >
-                  {isTutorial &&
-                    tutorialStep ===
-                      'editProject' &&
-                    appData.tutorialProjectId ===
-                      project.id &&
-                    renderListTutorialBubble(
-                      isJapanese
-                        ? '作品を編集'
-                        : 'Edit the project',
-                      isJapanese
-                        ? 'この編集ボタンから作品名・メモの変更や削除ができます。'
-                        : 'Use this button to edit or delete the project.',
-                      9,
-                      'below'
-                    )}
-
                   {isTutorial &&
                     tutorialStep ===
                       'editProject' &&
@@ -1574,6 +1736,7 @@ export default function ProjectListScreen() {
           5 ||
           isTutorial) && (
           <TouchableOpacity
+            ref={addButtonRef}
             style={[
               styles.addButton,
 
@@ -1597,20 +1760,6 @@ export default function ProjectListScreen() {
               openCreateModal
             }
           >
-            {isTutorial &&
-              tutorialStep ===
-                'create' &&
-              renderListTutorialBubble(
-                isJapanese
-                  ? '作品を作る'
-                  : 'Create a project',
-                isJapanese
-                  ? 'まずは＋を押して、新しい作品を作ります。'
-                  : 'Tap + to create a new project.',
-                1,
-                'aboveRight'
-              )}
-
             {isTutorial &&
               tutorialStep ===
                 'create' && (
@@ -1809,64 +1958,44 @@ const styles =
       borderRadius: 22,
     },
 
-    listBubble: {
+    floatingListBubble: {
       position: 'absolute',
-      zIndex: 150,
-      elevation: 22,
-      width: 230,
+      zIndex: 180,
+      elevation: 30,
       borderRadius: 18,
       borderWidth: 1,
       paddingHorizontal: 14,
       paddingTop: 11,
       paddingBottom: 12,
       shadowColor: '#000',
-      shadowOpacity: 0.13,
-      shadowRadius: 10,
+      shadowOpacity: 0.14,
+      shadowRadius: 12,
       shadowOffset: {
         width: 0,
-        height: 4,
+        height: 5,
       },
     },
 
-    listBubbleAbove: {
-      bottom: '100%',
-      marginBottom: 14,
-      alignSelf: 'center',
-    },
-
-    listBubbleBelow: {
-      top: '100%',
-      marginTop: 14,
-      alignSelf: 'center',
-    },
-
-    listBubbleAboveRight: {
-      right: -2,
-      bottom: '100%',
-      marginBottom: 14,
-    },
-
-    listBubbleStep: {
+    floatingListStep: {
       fontSize: 11,
       fontWeight: '800',
       marginBottom: 4,
     },
 
-    listBubbleTitle: {
+    floatingListTitle: {
       fontSize: 16,
       fontWeight: '800',
       marginBottom: 3,
     },
 
-    listBubbleText: {
+    floatingListText: {
       fontSize: 13,
       lineHeight: 18,
       fontWeight: '500',
     },
 
-    listBubblePointer: {
+    floatingListPointer: {
       position: 'absolute',
-      right: 24,
       width: 0,
       height: 0,
       borderLeftWidth: 10,
@@ -1875,16 +2004,6 @@ const styles =
         'transparent',
       borderRightColor:
         'transparent',
-    },
-
-    listBubblePointerDown: {
-      bottom: -10,
-      borderTopWidth: 10,
-    },
-
-    listBubblePointerUp: {
-      top: -10,
-      borderBottomWidth: 10,
     },
 
     tutorialBanner: {
