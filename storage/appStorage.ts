@@ -49,6 +49,7 @@ export type TutorialStep =
   | 'stitch'
   | 'progress'
   | 'undo'
+  | 'separator'
   | 'editProject'
   | 'deleteProject'
   | 'complete';
