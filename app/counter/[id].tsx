@@ -336,6 +336,13 @@ export default function CounterScreen() {
   };
 
   const addRow = async () => {
+    if (
+      isTutorial &&
+      tutorialStep !== 'row'
+    ) {
+      return;
+    }
+
     playTapSound();
 
     const previous =
@@ -388,6 +395,14 @@ export default function CounterScreen() {
 
   const addStitch =
     async () => {
+      if (
+        isTutorial &&
+        tutorialStep !==
+          'stitch'
+      ) {
+        return;
+      }
+
       playTapSound();
 
       const previous =
@@ -415,6 +430,10 @@ export default function CounterScreen() {
 
   const startNewRow =
     async () => {
+      if (isTutorial) {
+        return;
+      }
+
       const previous =
         saveUndo(project);
 
@@ -457,6 +476,10 @@ export default function CounterScreen() {
 
   const startNewStitch =
     async () => {
+      if (isTutorial) {
+        return;
+      }
+
       const previous =
         saveUndo(project);
 
@@ -495,6 +518,14 @@ export default function CounterScreen() {
 
   const addMark =
     async () => {
+      if (
+        isTutorial &&
+        tutorialStep !==
+          'progress'
+      ) {
+        return;
+      }
+
       const previous =
         saveUndo(project);
 
@@ -535,6 +566,13 @@ export default function CounterScreen() {
     };
 
   const undo = async () => {
+    if (
+      isTutorial &&
+      tutorialStep !== 'undo'
+    ) {
+      return;
+    }
+
     if (
       project.undoStack
         .length === 0
@@ -912,6 +950,9 @@ export default function CounterScreen() {
               borderColor:
                 currentTheme.accent,
             },
+
+            isTutorial &&
+              styles.tutorialDim,
           ]}
           activeOpacity={0.8}
           onPress={
@@ -1448,10 +1489,15 @@ export default function CounterScreen() {
           ]}
         >
           <TouchableOpacity
-            style={styles.backButton}
+            style={[
+              styles.backButton,
+              isTutorial &&
+                styles.tutorialDim,
+            ]}
             onPress={() =>
               router.back()
             }
+            disabled={isTutorial}
           >
             <Text
               style={[
