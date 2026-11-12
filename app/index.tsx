@@ -660,6 +660,90 @@ export default function ProjectListScreen() {
       );
     };
 
+  const renderListTutorialBubble = (
+    title: string,
+    body: string,
+    step: number,
+    position:
+      | 'above'
+      | 'below'
+      | 'aboveRight'
+  ) => (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.listBubble,
+        position === 'above' &&
+          styles.listBubbleAbove,
+        position === 'below' &&
+          styles.listBubbleBelow,
+        position ===
+          'aboveRight' &&
+          styles.listBubbleAboveRight,
+        {
+          backgroundColor:
+            currentTheme.surface,
+          borderColor:
+            currentTheme.border,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.listBubbleStep,
+          {
+            color:
+              currentTheme.subText,
+          },
+        ]}
+      >
+        {step} / 11
+      </Text>
+
+      <Text
+        style={[
+          styles.listBubbleTitle,
+          {
+            color:
+              currentTheme.text,
+          },
+        ]}
+      >
+        {title}
+      </Text>
+
+      <Text
+        style={[
+          styles.listBubbleText,
+          {
+            color:
+              currentTheme.subText,
+          },
+        ]}
+      >
+        {body}
+      </Text>
+
+      <View
+        style={[
+          styles.listBubblePointer,
+          position === 'below'
+            ? styles.listBubblePointerUp
+            : styles.listBubblePointerDown,
+          position === 'below'
+            ? {
+                borderBottomColor:
+                  currentTheme.surface,
+              }
+            : {
+                borderTopColor:
+                  currentTheme.surface,
+              },
+        ]}
+      />
+    </View>
+  );
+
   const renderProjectForm =
     (
       mode:
@@ -1329,6 +1413,22 @@ export default function ProjectListScreen() {
                     )
                   }
                 >
+                  {isTutorial &&
+                    tutorialStep ===
+                      'openProject' &&
+                    appData.tutorialProjectId ===
+                      project.id &&
+                    renderListTutorialBubble(
+                      isJapanese
+                        ? '作った作品を開く'
+                        : 'Open your project',
+                      isJapanese
+                        ? 'この作品をタップしてカウンターを開きます。'
+                        : 'Tap this project to open the counter.',
+                      3,
+                      'below'
+                    )}
+
                   <View
                     style={
                       styles.projectInfo
@@ -1425,6 +1525,22 @@ export default function ProjectListScreen() {
                     tutorialStep ===
                       'editProject' &&
                     appData.tutorialProjectId ===
+                      project.id &&
+                    renderListTutorialBubble(
+                      isJapanese
+                        ? '作品を編集'
+                        : 'Edit the project',
+                      isJapanese
+                        ? 'この編集ボタンから作品名・メモの変更や削除ができます。'
+                        : 'Use this button to edit or delete the project.',
+                      9,
+                      'below'
+                    )}
+
+                  {isTutorial &&
+                    tutorialStep ===
+                      'editProject' &&
+                    appData.tutorialProjectId ===
                       project.id && (
                       <Animated.View
                         pointerEvents="none"
@@ -1483,6 +1599,20 @@ export default function ProjectListScreen() {
           >
             {isTutorial &&
               tutorialStep ===
+                'create' &&
+              renderListTutorialBubble(
+                isJapanese
+                  ? '作品を作る'
+                  : 'Create a project',
+                isJapanese
+                  ? 'まずは＋を押して、新しい作品を作ります。'
+                  : 'Tap + to create a new project.',
+                1,
+                'aboveRight'
+              )}
+
+            {isTutorial &&
+              tutorialStep ===
                 'create' && (
                 <Animated.View
                   pointerEvents="none"
@@ -1510,116 +1640,6 @@ export default function ProjectListScreen() {
             </Text>
           </TouchableOpacity>
         )}
-
-        {isTutorial &&
-          !createModalVisible &&
-          !editModalVisible &&
-          tutorialStep !==
-            'complete' && (
-            <View
-              pointerEvents="none"
-              style={[
-                styles.tutorialMessage,
-                tutorialStep ===
-                  'create'
-                  ? styles.tutorialMessageCreate
-                  : tutorialStep ===
-                      'openProject'
-                    ? styles.tutorialMessageProject
-                    : styles.tutorialMessageEdit,
-                {
-                  backgroundColor:
-                    currentTheme.surface,
-                  borderColor:
-                    currentTheme.border,
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.tutorialStepBadge,
-                  {
-                    backgroundColor:
-                      currentTheme.soft,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tutorialStepBadgeText,
-                    {
-                      color:
-                        currentTheme.text,
-                    },
-                  ]}
-                >
-                  {tutorialStepNumber} / 11
-                </Text>
-              </View>
-
-              <Text
-                style={[
-                  styles.tutorialMessageTitle,
-                  {
-                    color:
-                      currentTheme.text,
-                  },
-                ]}
-              >
-                {tutorialStep ===
-                'create'
-                  ? isJapanese
-                    ? '作品を作ってみましょう'
-                    : 'Create a project'
-                  : tutorialStep ===
-                      'openProject'
-                    ? isJapanese
-                      ? '作った作品を開きます'
-                      : 'Open your project'
-                    : isJapanese
-                      ? '作品を編集します'
-                      : 'Edit the project'}
-              </Text>
-
-              <Text
-                style={[
-                  styles.tutorialMessageText,
-                  {
-                    color:
-                      currentTheme.subText,
-                  },
-                ]}
-              >
-                {tutorialStep ===
-                'create'
-                  ? isJapanese
-                    ? '吹き出しの先にある＋をタップしてください。'
-                    : 'Tap the + indicated by the bubble.'
-                  : tutorialStep ===
-                      'openProject'
-                    ? isJapanese
-                      ? '作った作品をタップして開いてください。'
-                      : 'Tap the project you just created.'
-                    : isJapanese
-                      ? '右側の編集ボタンをタップしてください。'
-                      : 'Tap the edit button on the right.'}
-              </Text>
-
-              <View
-                style={[
-                  styles.tutorialPointer,
-                  tutorialStep ===
-                    'openProject'
-                    ? styles.tutorialPointerLeft
-                    : styles.tutorialPointerRight,
-                  {
-                    borderTopColor:
-                      currentTheme.surface,
-                  },
-                ]}
-              />
-            </View>
-          )}
 
         {isTutorial &&
           tutorialStep ===
@@ -1789,80 +1809,82 @@ const styles =
       borderRadius: 22,
     },
 
-    tutorialMessage: {
+    listBubble: {
       position: 'absolute',
-      zIndex: 80,
-      width: 250,
-      borderRadius: 20,
+      zIndex: 150,
+      elevation: 22,
+      width: 230,
+      borderRadius: 18,
       borderWidth: 1,
-      paddingHorizontal: 16,
-      paddingTop: 13,
-      paddingBottom: 14,
+      paddingHorizontal: 14,
+      paddingTop: 11,
+      paddingBottom: 12,
       shadowColor: '#000',
-      shadowOpacity: 0.12,
-      shadowRadius: 12,
+      shadowOpacity: 0.13,
+      shadowRadius: 10,
       shadowOffset: {
         width: 0,
-        height: 5,
+        height: 4,
       },
-      elevation: 7,
     },
 
-    tutorialMessageCreate: {
-      right: 18,
-      bottom: 112,
+    listBubbleAbove: {
+      bottom: '100%',
+      marginBottom: 14,
+      alignSelf: 'center',
     },
 
-    tutorialMessageProject: {
-      left: 22,
-      top: 96,
+    listBubbleBelow: {
+      top: '100%',
+      marginTop: 14,
+      alignSelf: 'center',
     },
 
-    tutorialMessageEdit: {
-      right: 22,
-      top: 96,
+    listBubbleAboveRight: {
+      right: -2,
+      bottom: '100%',
+      marginBottom: 14,
     },
 
-    tutorialStepBadge: {
-      alignSelf: 'flex-start',
-      minWidth: 48,
-      minHeight: 26,
-      paddingHorizontal: 9,
-      borderRadius: 13,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 8,
-    },
-
-    tutorialStepBadgeText: {
-      fontSize: 12,
-      fontWeight: '800',
-      letterSpacing: 0.3,
-    },
-
-    tutorialMessageTitle: {
-      fontSize: 18,
+    listBubbleStep: {
+      fontSize: 11,
       fontWeight: '800',
       marginBottom: 4,
     },
 
-    tutorialMessageText: {
-      fontSize: 14,
-      lineHeight: 20,
+    listBubbleTitle: {
+      fontSize: 16,
+      fontWeight: '800',
+      marginBottom: 3,
+    },
+
+    listBubbleText: {
+      fontSize: 13,
+      lineHeight: 18,
       fontWeight: '500',
     },
 
-    tutorialPointer: {
+    listBubblePointer: {
       position: 'absolute',
-      right: 30,
-      bottom: -12,
+      right: 24,
       width: 0,
       height: 0,
-      borderLeftWidth: 12,
-      borderRightWidth: 12,
-      borderTopWidth: 12,
-      borderLeftColor: 'transparent',
-      borderRightColor: 'transparent',
+      borderLeftWidth: 10,
+      borderRightWidth: 10,
+      borderLeftColor:
+        'transparent',
+      borderRightColor:
+        'transparent',
+    },
+
+    listBubblePointerDown: {
+      bottom: -10,
+      borderTopWidth: 10,
+    },
+
+    listBubblePointerUp: {
+      top: -10,
+      borderBottomWidth: 10,
     },
 
     tutorialBanner: {
