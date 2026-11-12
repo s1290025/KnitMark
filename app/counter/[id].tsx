@@ -36,6 +36,7 @@ import {
   loadAppData,
   Project,
   saveAppData,
+  TutorialStep,
   updateProject,
 } from '../../storage/appStorage';
 
@@ -104,6 +105,14 @@ export default function CounterScreen() {
     setSoundEnabled,
   ] = useState(true);
 
+  const [
+    tutorialStep,
+    setTutorialStep,
+  ] =
+    useState<TutorialStep | null>(
+      null
+    );
+
   const tapPlayer =
     useAudioPlayer(
       require('../../assets/sounds/tap.wav')
@@ -152,6 +161,15 @@ export default function CounterScreen() {
           setSoundEnabled(
             data.soundEnabled
           );
+
+          setTutorialStep(
+            data.introStage ===
+                'tutorial' &&
+              data.tutorialProjectId ===
+                id
+              ? data.tutorialStep
+              : null
+          );
         }
       };
 
@@ -188,6 +206,63 @@ export default function CounterScreen() {
 
   const isJapanese =
     language === 'ja';
+
+  const isTutorial =
+    tutorialStep !== null;
+
+  const advanceTutorial =
+    async (
+      nextStep: TutorialStep
+    ) => {
+      const data =
+        await loadAppData();
+
+      if (
+        data.introStage !==
+          'tutorial' ||
+        data.tutorialProjectId !==
+          id
+      ) {
+        return;
+      }
+
+      const nextData = {
+        ...data,
+        tutorialStep:
+          nextStep,
+      };
+
+      setTutorialStep(nextStep);
+      await saveAppData(nextData);
+    };
+
+  const finishTutorial =
+    async () => {
+      const data =
+        await loadAppData();
+
+      const nextData = {
+        ...data,
+        projects:
+          data.tutorialProjectId
+            ? data.projects.filter(
+                (item) =>
+                  item.id !==
+                  data.tutorialProjectId
+              )
+            : data.projects,
+        introStage:
+          'done' as const,
+        tutorialStep:
+          'create' as const,
+        tutorialProjectId:
+          null,
+      };
+
+      await saveAppData(nextData);
+      setTutorialStep(null);
+      router.replace('/');
+    };
 
   const playTapSound =
     () => {
@@ -301,6 +376,14 @@ export default function CounterScreen() {
         previous,
       ],
     });
+
+    if (
+      tutorialStep === 'row'
+    ) {
+      await advanceTutorial(
+        'stitch'
+      );
+    }
   };
 
   const addStitch =
@@ -319,6 +402,15 @@ export default function CounterScreen() {
           previous,
         ],
       });
+
+      if (
+        tutorialStep ===
+          'stitch'
+      ) {
+        await advanceTutorial(
+          'progress'
+        );
+      }
     };
 
   const startNewRow =
@@ -431,6 +523,15 @@ export default function CounterScreen() {
           previous,
         ],
       });
+
+      if (
+        tutorialStep ===
+          'progress'
+      ) {
+        await advanceTutorial(
+          'undo'
+        );
+      }
     };
 
   const undo = async () => {
@@ -460,6 +561,12 @@ export default function CounterScreen() {
           -1
         ),
     });
+
+    if (
+      tutorialStep === 'undo'
+    ) {
+      await finishTutorial();
+    }
   };
 
   const openMemoViewer =
@@ -843,6 +950,16 @@ export default function CounterScreen() {
               borderColor:
                 currentTheme.accent,
             },
+
+            isTutorial &&
+              tutorialStep ===
+                'progress' &&
+              styles.tutorialTarget,
+
+            isTutorial &&
+              tutorialStep !==
+                'progress' &&
+              styles.tutorialDim,
           ]}
           activeOpacity={0.8}
           onPress={addMark}
@@ -875,6 +992,16 @@ export default function CounterScreen() {
             project.undoStack
               .length === 0 &&
               styles.undoDisabled,
+
+            isTutorial &&
+              tutorialStep ===
+                'undo' &&
+              styles.tutorialTarget,
+
+            isTutorial &&
+              tutorialStep !==
+                'undo' &&
+              styles.tutorialDim,
           ]}
           activeOpacity={0.8}
           onPress={undo}
@@ -909,6 +1036,16 @@ export default function CounterScreen() {
           project.undoStack
             .length === 0 &&
             styles.undoDisabled,
+
+          isTutorial &&
+            tutorialStep ===
+              'undo' &&
+            styles.tutorialTarget,
+
+          isTutorial &&
+            tutorialStep !==
+              'undo' &&
+            styles.tutorialDim,
         ]}
         activeOpacity={0.8}
         onPress={undo}
@@ -939,6 +1076,16 @@ export default function CounterScreen() {
             borderColor:
               currentTheme.accent,
           },
+
+          isTutorial &&
+            tutorialStep ===
+              'progress' &&
+            styles.tutorialTarget,
+
+          isTutorial &&
+            tutorialStep !==
+              'progress' &&
+            styles.tutorialDim,
         ]}
         activeOpacity={0.8}
         onPress={addMark}
@@ -993,6 +1140,19 @@ export default function CounterScreen() {
           isTablet &&
             landscape &&
             styles.counterSectionLandscapeTablet,
+
+          isTutorial &&
+            ((tutorialStep ===
+                'row' &&
+              !isRow) ||
+              (tutorialStep ===
+                'stitch' &&
+                isRow) ||
+              tutorialStep ===
+                'progress' ||
+              tutorialStep ===
+                'undo') &&
+            styles.tutorialDim,
         ]}
       >
         <View
@@ -1167,6 +1327,15 @@ export default function CounterScreen() {
               backgroundColor:
                 currentTheme.accent,
             },
+
+            isTutorial &&
+              ((tutorialStep ===
+                  'row' &&
+                isRow) ||
+                (tutorialStep ===
+                  'stitch' &&
+                  !isRow)) &&
+              styles.tutorialTarget,
           ]}
           activeOpacity={0.8}
           onPress={
@@ -1225,9 +1394,51 @@ export default function CounterScreen() {
           },
         ]}
       >
+        {isTutorial && (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.tutorialMessage,
+              {
+                backgroundColor:
+                  currentTheme.text,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.tutorialMessageText,
+                {
+                  color:
+                    currentTheme.background,
+                },
+              ]}
+            >
+              {tutorialStep === 'row'
+                ? isJapanese
+                  ? '段の＋を押して、1段進めてみましょう。'
+                  : 'Tap + for Rows to count one row.'
+                : tutorialStep === 'stitch'
+                  ? isJapanese
+                    ? '次に、目の＋を押して1目数えてみましょう。'
+                    : 'Now tap + for Stitches.'
+                  : tutorialStep === 'progress'
+                    ? isJapanese
+                      ? '「途中を記録」を押して、今の位置を残します。'
+                      : 'Tap Save Progress to mark your place.'
+                    : isJapanese
+                      ? '最後にUndoを押して、ひとつ前へ戻してみましょう。'
+                      : 'Finally, tap Undo to go back one step.'}
+            </Text>
+          </View>
+        )}
+
         <View
           style={[
             styles.header,
+
+            isTutorial &&
+              styles.tutorialDim,
 
             isSmallScreen &&
               styles.headerSmall,
@@ -1906,6 +2117,45 @@ export default function CounterScreen() {
 
 const styles =
   StyleSheet.create({
+    tutorialDim: {
+      opacity: 0.2,
+    },
+
+    tutorialTarget: {
+      zIndex: 100,
+      elevation: 20,
+      borderWidth: 4,
+      borderColor: '#7A4E32',
+      transform: [
+        { scale: 1.035 },
+      ],
+      shadowColor: '#000',
+      shadowOpacity: 0.32,
+      shadowRadius: 14,
+      shadowOffset: {
+        width: 0,
+        height: 6,
+      },
+    },
+
+    tutorialMessage: {
+      position: 'absolute',
+      top: 76,
+      left: 20,
+      right: 20,
+      zIndex: 120,
+      borderRadius: 18,
+      paddingHorizontal: 18,
+      paddingVertical: 14,
+    },
+
+    tutorialMessageText: {
+      fontSize: 16,
+      lineHeight: 23,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+
     loadingSafeArea: {
       flex: 1,
       backgroundColor:
