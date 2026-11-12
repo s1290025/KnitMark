@@ -283,13 +283,7 @@ export default function ProjectListScreen() {
         isTutorial &&
         tutorialStep === 'create';
 
-      setProjectName(
-        tutorialCreating
-          ? isJapanese
-            ? '練習作品'
-            : 'Practice Project'
-          : ''
-      );
+      setProjectName('');
       setMemo('');
 
       setCreateModalVisible(
@@ -736,8 +730,8 @@ export default function ProjectListScreen() {
                             ]}
                           >
                             {isJapanese
-                              ? '名前は入力済みです。下の「作成」をタップしてください。'
-                              : 'The name is ready. Tap Create below.'}
+                              ? '作品名を入力して、下の「作成」をタップしてください。'
+                              : 'Enter a project name, then tap Create below.'}
                           </Text>
                         </View>
                       )}
@@ -893,6 +887,7 @@ export default function ProjectListScreen() {
                               pointerEvents="none"
                               style={[
                                 styles.tutorialPulseRing,
+                                styles.tutorialPulseButton,
                                 pulseStyle,
                               ]}
                             />
@@ -924,12 +919,6 @@ export default function ProjectListScreen() {
                             backgroundColor:
                               currentTheme.accent,
                           },
-
-                          isCreate &&
-                            isTutorial &&
-                            tutorialStep ===
-                              'createForm' &&
-                            styles.tutorialTarget,
 
                           name.trim() ===
                             '' &&
@@ -1144,13 +1133,6 @@ export default function ProjectListScreen() {
                   isTutorial &&
                     tutorialStep ===
                       'openProject' &&
-                    appData.tutorialProjectId ===
-                      project.id &&
-                    styles.tutorialTarget,
-
-                  isTutorial &&
-                    tutorialStep ===
-                      'openProject' &&
                     appData.tutorialProjectId !==
                       project.id &&
                     styles.tutorialDim,
@@ -1308,11 +1290,6 @@ export default function ProjectListScreen() {
                 backgroundColor:
                   currentTheme.accent,
               },
-
-              isTutorial &&
-                tutorialStep ===
-                  'create' &&
-                styles.tutorialTarget,
 
               isTutorial &&
                 tutorialStep !==
@@ -1493,20 +1470,6 @@ const styles =
       opacity: 0.16,
     },
 
-    tutorialTarget: {
-      zIndex: 100,
-      elevation: 20,
-      borderWidth: 2.5,
-      borderColor: '#8B684F',
-      shadowColor: '#000',
-      shadowOpacity: 0.2,
-      shadowRadius: 12,
-      shadowOffset: {
-        width: 0,
-        height: 5,
-      },
-    },
-
     tutorialPulseRing: {
       position: 'absolute',
       top: -7,
@@ -1520,6 +1483,10 @@ const styles =
 
     tutorialPulseCard: {
       borderRadius: 24,
+    },
+
+    tutorialPulseButton: {
+      borderRadius: 22,
     },
 
     tutorialMessage: {
