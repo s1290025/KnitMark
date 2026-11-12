@@ -184,6 +184,8 @@ export default function SettingsScreen() {
       const nextData: AppData = {
         ...appData,
         introStage: 'onboarding',
+        tutorialStep: 'create',
+        tutorialProjectId: null,
       };
 
       await saveAppData(
