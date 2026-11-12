@@ -385,7 +385,13 @@ export default function ProjectListScreen() {
 
       setAppData(nextData);
 
-      closeCreateModal();
+      // When creation succeeds, close the modal without running
+      // the cancel handler. The cancel handler intentionally rewinds
+      // the tutorial from createForm back to create.
+      Keyboard.dismiss();
+      setCreateModalVisible(false);
+      setProjectName('');
+      setMemo('');
     };
 
   const openProject =
