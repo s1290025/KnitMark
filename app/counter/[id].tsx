@@ -211,11 +211,9 @@ export default function CounterScreen() {
     }
 
     const ref =
-      tutorialStep === 'row1' ||
-      tutorialStep === 'row2'
+      tutorialStep === 'row1'
         ? rowPlusRef
-        : tutorialStep === 'stitch1' ||
-            tutorialStep === 'stitch2'
+        : tutorialStep === 'stitch1'
           ? stitchPlusRef
           : tutorialStep === 'progress'
             ? progressRef
@@ -340,19 +338,18 @@ export default function CounterScreen() {
     tutorialStep !== null;
 
   const tutorialStepNumber =
-    tutorialStep === 'row1' ||
-    tutorialStep === 'stitch1'
+    tutorialStep === 'row1'
       ? 4
-      : tutorialStep === 'row2' ||
-          tutorialStep === 'stitch2'
+      : tutorialStep === 'stitch1'
         ? 5
-        : tutorialStep === 'progress' ||
-            tutorialStep ===
-              'stitchSeparator'
+        : tutorialStep === 'progress'
           ? 6
-          : tutorialStep === 'undo'
+          : tutorialStep ===
+              'stitchSeparator'
             ? 7
-            : 8;
+            : tutorialStep === 'undo'
+              ? 8
+              : 9;
 
   const pulseStyle = {
     opacity:
@@ -474,8 +471,7 @@ export default function CounterScreen() {
   const addRow = async () => {
     if (
       isTutorial &&
-      tutorialStep !== 'row1' &&
-      tutorialStep !== 'row2'
+      tutorialStep !== 'row1'
     ) {
       return;
     }
@@ -529,13 +525,6 @@ export default function CounterScreen() {
       );
     }
 
-    if (
-      tutorialStep === 'row2'
-    ) {
-      await advanceTutorial(
-        'stitch2'
-      );
-    }
   };
 
   const addStitch =
@@ -543,9 +532,7 @@ export default function CounterScreen() {
       if (
         isTutorial &&
         tutorialStep !==
-          'stitch1' &&
-        tutorialStep !==
-          'stitch2'
+          'stitch1'
       ) {
         return;
       }
@@ -571,16 +558,6 @@ export default function CounterScreen() {
       if (
         tutorialStep ===
           'stitch1' &&
-        nextStitch >= 3
-      ) {
-        await advanceTutorial(
-          'row2'
-        );
-      }
-
-      if (
-        tutorialStep ===
-          'stitch2' &&
         nextStitch >= 3
       ) {
         await advanceTutorial(
@@ -637,6 +614,17 @@ export default function CounterScreen() {
           previous,
         ],
       });
+
+      if (
+        tutorialStep ===
+          'rowSeparator'
+      ) {
+        await advanceTutorial(
+          'editProject'
+        );
+
+        router.replace('/');
+      }
     };
 
   const startNewStitch =
@@ -683,6 +671,15 @@ export default function CounterScreen() {
           previous,
         ],
       });
+
+      if (
+        tutorialStep ===
+          'stitchSeparator'
+      ) {
+        await advanceTutorial(
+          'undo'
+        );
+      }
     };
 
   const addMark =
@@ -1653,8 +1650,6 @@ export default function CounterScreen() {
           tutorialTarget &&
           (tutorialStep === 'row1' ||
             tutorialStep === 'stitch1' ||
-            tutorialStep === 'row2' ||
-            tutorialStep === 'stitch2' ||
             tutorialStep === 'progress' ||
             tutorialStep === 'stitchSeparator' ||
             tutorialStep === 'undo' ||
@@ -1673,16 +1668,41 @@ export default function CounterScreen() {
                   bubbleWidth / 2
               )
             );
+            const estimatedBubbleHeight =
+              tutorialStep ===
+                  'stitchSeparator' ||
+                tutorialStep ===
+                  'rowSeparator'
+                ? 150
+                : 126;
+            const spaceAbove =
+              tutorialTarget.y - 12;
+            const spaceBelow =
+              height -
+              (tutorialTarget.y +
+                tutorialTarget.height) -
+              12;
             const showAbove =
-              tutorialTarget.y > 190;
-            const top = showAbove
-              ? Math.max(
-                  8,
-                  tutorialTarget.y - 150
-                )
+              spaceAbove >=
+                estimatedBubbleHeight +
+                  14 ||
+              spaceAbove > spaceBelow;
+            const rawTop = showAbove
+              ? tutorialTarget.y -
+                estimatedBubbleHeight -
+                14
               : tutorialTarget.y +
                 tutorialTarget.height +
-                16;
+                14;
+            const top = Math.max(
+              8,
+              Math.min(
+                height -
+                  estimatedBubbleHeight -
+                  8,
+                rawTop
+              )
+            );
             const pointerLeft = Math.max(
               20,
               Math.min(
@@ -1691,22 +1711,15 @@ export default function CounterScreen() {
               )
             );
 
-            const isFirstRow =
-              tutorialStep === 'row1' ||
-              tutorialStep === 'stitch1';
-            const isSecondRow =
-              tutorialStep === 'row2' ||
-              tutorialStep === 'stitch2';
-
             const title =
-              isFirstRow
+              tutorialStep === 'row1'
                 ? isJapanese
-                  ? '1段目を数える'
-                  : 'Count the first row'
-                : isSecondRow
+                  ? '段を数える'
+                  : 'Count a row'
+                : tutorialStep === 'stitch1'
                   ? isJapanese
-                    ? '2段目を数える'
-                    : 'Count the second row'
+                    ? '目を数える'
+                    : 'Count stitches'
                   : tutorialStep ===
                       'progress'
                     ? isJapanese
@@ -1715,53 +1728,43 @@ export default function CounterScreen() {
                     : tutorialStep ===
                         'stitchSeparator'
                       ? isJapanese
-                        ? '目を区切る'
-                        : 'Separate stitches'
+                        ? '目の│→'
+                        : 'Stitch │→'
                       : tutorialStep ===
                           'undo'
                         ? 'Undo'
                         : isJapanese
-                          ? '段を区切る'
-                          : 'Separate rows';
+                          ? '段の│→'
+                          : 'Row │→';
 
             const body =
               tutorialStep === 'row1'
                 ? isJapanese
-                  ? 'まず段の＋を1回押します。'
-                  : 'Tap the row + once.'
+                  ? '段の＋を1回押して、1段にします。'
+                  : 'Tap the row + once to reach 1 row.'
                 : tutorialStep ===
                     'stitch1'
                   ? isJapanese
                     ? `目の＋をあと${Math.max(0, 3 - project.stitch)}回押して、1段3目にします。`
                     : `Tap the stitch + ${Math.max(0, 3 - project.stitch)} more time(s) to reach 1 row, 3 stitches.`
                   : tutorialStep ===
-                      'row2'
+                      'progress'
                     ? isJapanese
-                      ? '次の段へ進むため、段の＋を1回押します。'
-                      : 'Tap the row + once for the next row.'
+                      ? '1段3目の位置を「途中」として履歴に残します。'
+                      : 'Save 1 row, 3 stitches as a progress marker.'
                     : tutorialStep ===
-                        'stitch2'
+                        'stitchSeparator'
                       ? isJapanese
-                        ? `目の＋をあと${Math.max(0, 3 - project.stitch)}回押して、2段3目にします。`
-                        : `Tap the stitch + ${Math.max(0, 3 - project.stitch)} more time(s) to reach 2 rows, 3 stitches.`
+                        ? '目側の│→を押します。段は1のまま、3目を履歴に残して目だけ0にします。'
+                        : 'Tap the stitch │→. The row stays at 1, while 3 stitches are saved and stitches reset to 0.'
                       : tutorialStep ===
-                          'progress'
+                          'undo'
                         ? isJapanese
-                          ? '2段3目の現在位置を「途中」として履歴に残します。'
-                          : 'Save the current 2 rows, 3 stitches as a progress marker.'
-                        : tutorialStep ===
-                            'stitchSeparator'
-                          ? isJapanese
-                            ? '目側の│→を押します。2段はそのままで、3目が履歴に残り、目だけ0になります。'
-                            : 'Tap the stitch │→. Rows stay at 2, while 3 stitches are saved and stitches reset to 0.'
-                          : tutorialStep ===
-                              'undo'
-                            ? isJapanese
-                              ? 'Undoを押して、2段3目の状態に戻します。'
-                              : 'Tap Undo to return to 2 rows, 3 stitches.'
-                            : isJapanese
-                              ? '段側の│→を押します。2段3目を履歴に残し、段と目を両方0にします。'
-                              : 'Tap the row │→. It saves 2 rows, 3 stitches and resets both to 0.';
+                          ? 'Undoを押して、1段3目に戻します。'
+                          : 'Tap Undo to return to 1 row, 3 stitches.'
+                        : isJapanese
+                          ? '次は段側の│→。1段3目を履歴に残し、段と目を両方0にします。'
+                          : 'Now tap the row │→. It saves 1 row, 3 stitches and resets both to 0.';
 
             return (
               <View
