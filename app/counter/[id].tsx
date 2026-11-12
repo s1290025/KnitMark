@@ -761,6 +761,31 @@ export default function CounterScreen() {
                 ? '途中'
                 : 'Paused'}
             </Text>
+
+            <View
+              style={[
+                styles.tutorialPointer,
+                tutorialStep ===
+                    'progress' ||
+                  tutorialStep ===
+                    'undo'
+                  ? styles.tutorialPointerUp
+                  : styles.tutorialPointerDown,
+
+                tutorialStep ===
+                    'progress' ||
+                  tutorialStep ===
+                    'undo'
+                  ? {
+                      borderBottomColor:
+                        currentTheme.surface,
+                    }
+                  : {
+                      borderTopColor:
+                        currentTheme.surface,
+                    },
+              ]}
+            />
           </View>
         )}
       </View>
@@ -1493,6 +1518,14 @@ export default function CounterScreen() {
             pointerEvents="none"
             style={[
               styles.tutorialMessage,
+
+              tutorialStep === 'row'
+                ? styles.tutorialMessageRow
+                : tutorialStep ===
+                    'stitch'
+                  ? styles.tutorialMessageStitch
+                  : styles.tutorialMessageAction,
+
               {
                 backgroundColor:
                   currentTheme.surface,
@@ -2283,15 +2316,13 @@ const styles =
 
     tutorialMessage: {
       position: 'absolute',
-      top: 72,
-      left: 20,
-      right: 20,
       zIndex: 120,
-      borderRadius: 22,
+      width: 246,
+      borderRadius: 20,
       borderWidth: 1,
-      paddingHorizontal: 18,
-      paddingTop: 15,
-      paddingBottom: 17,
+      paddingHorizontal: 16,
+      paddingTop: 13,
+      paddingBottom: 14,
       shadowColor: '#000',
       shadowOpacity: 0.12,
       shadowRadius: 12,
@@ -2300,6 +2331,45 @@ const styles =
         height: 5,
       },
       elevation: 7,
+    },
+
+    tutorialMessageRow: {
+      left: 18,
+      top: '45%',
+    },
+
+    tutorialMessageStitch: {
+      right: 18,
+      bottom: 150,
+    },
+
+    tutorialMessageAction: {
+      right: 18,
+      top: 112,
+    },
+
+    tutorialPointer: {
+      position: 'absolute',
+      width: 0,
+      height: 0,
+      borderLeftWidth: 11,
+      borderRightWidth: 11,
+      borderLeftColor:
+        'transparent',
+      borderRightColor:
+        'transparent',
+    },
+
+    tutorialPointerDown: {
+      right: 32,
+      bottom: -11,
+      borderTopWidth: 11,
+    },
+
+    tutorialPointerUp: {
+      right: 32,
+      top: -11,
+      borderBottomWidth: 11,
     },
 
     tutorialStepBadge: {
