@@ -48,7 +48,8 @@ export type TutorialStep =
   | 'row'
   | 'stitch'
   | 'progress'
-  | 'undo';
+  | 'undo'
+  | 'complete';
 
 export type AppData = {
   projects: Project[];
