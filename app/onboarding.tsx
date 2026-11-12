@@ -165,16 +165,37 @@ export default function OnboardingScreen() {
               />
             </View>
 
-            <Text
-              style={[
-                styles.placeholderLabel,
-                { color: theme.subText },
-              ]}
+            <View
+              style={styles.visualDecorationRow}
             >
-              {isJapanese
-                ? 'ここは後で画像に差し替え'
-                : 'Image placeholder'}
-            </Text>
+              <View
+                style={[
+                  styles.visualDecorationDot,
+                  {
+                    backgroundColor:
+                      theme.accent,
+                  },
+                ]}
+              />
+              <View
+                style={[
+                  styles.visualDecorationLine,
+                  {
+                    backgroundColor:
+                      theme.border,
+                  },
+                ]}
+              />
+              <View
+                style={[
+                  styles.visualDecorationDotSmall,
+                  {
+                    backgroundColor:
+                      theme.soft,
+                  },
+                ]}
+              />
+            </View>
           </View>
 
           <Text
@@ -310,6 +331,14 @@ const styles = StyleSheet.create({
     aspectRatio: 1.18,
     borderWidth: 1,
     borderRadius: 32,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    elevation: 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 34,
@@ -321,10 +350,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  placeholderLabel: {
-    marginTop: 18,
-    fontSize: 12,
-    fontWeight: '600',
+  visualDecorationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 22,
+  },
+  visualDecorationDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+  visualDecorationLine: {
+    width: 54,
+    height: 5,
+    borderRadius: 3,
+  },
+  visualDecorationDotSmall: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   title: {
     fontSize: 30,
