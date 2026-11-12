@@ -1061,11 +1061,6 @@ export default function CounterScreen() {
             },
 
             isTutorial &&
-              tutorialStep ===
-                'progress' &&
-              styles.tutorialTarget,
-
-            isTutorial &&
               tutorialStep !==
                 'progress' &&
               styles.tutorialDim,
@@ -1113,11 +1108,6 @@ export default function CounterScreen() {
             project.undoStack
               .length === 0 &&
               styles.undoDisabled,
-
-            isTutorial &&
-              tutorialStep ===
-                'undo' &&
-              styles.tutorialTarget,
 
             isTutorial &&
               tutorialStep !==
@@ -1171,11 +1161,6 @@ export default function CounterScreen() {
             styles.undoDisabled,
 
           isTutorial &&
-            tutorialStep ===
-              'undo' &&
-            styles.tutorialTarget,
-
-          isTutorial &&
             tutorialStep !==
               'undo' &&
             styles.tutorialDim,
@@ -1209,11 +1194,6 @@ export default function CounterScreen() {
             borderColor:
               currentTheme.accent,
           },
-
-          isTutorial &&
-            tutorialStep ===
-              'progress' &&
-            styles.tutorialTarget,
 
           isTutorial &&
             tutorialStep !==
@@ -1461,14 +1441,7 @@ export default function CounterScreen() {
                 currentTheme.accent,
             },
 
-            isTutorial &&
-              ((tutorialStep ===
-                  'row' &&
-                isRow) ||
-                (tutorialStep ===
-                  'stitch' &&
-                  !isRow)) &&
-              styles.tutorialTarget,
+
           ]}
           activeOpacity={0.8}
           onPress={
@@ -2420,20 +2393,6 @@ const styles =
   StyleSheet.create({
     tutorialDim: {
       opacity: 0.14,
-    },
-
-    tutorialTarget: {
-      zIndex: 100,
-      elevation: 20,
-      borderWidth: 2.5,
-      borderColor: '#8B684F',
-      shadowColor: '#000',
-      shadowOpacity: 0.2,
-      shadowRadius: 12,
-      shadowOffset: {
-        width: 0,
-        height: 5,
-      },
     },
 
     tutorialPulseRing: {
